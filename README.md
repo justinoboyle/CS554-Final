@@ -4,10 +4,10 @@ You can either run a local MongoDB server, or use the staging/dev MongoDB server
 
 ### Local MongoDB server
 
-Set the `MONGODB_URI` environment variable to the URI of your local MongoDB server. You can do this by creating a `.env` file in the root directory of the project, and adding the following line:
+Set the `DATABASE_URL` environment variable to the URI of your local MongoDB server. You can do this by creating a `.env` file in the root directory of the project, and adding the following line:
 
 ```
-MONGODB_URI=mongodb://127.0.0.1:27017
+DATABASE_URL=mongodb://127.0.0.1:27017
 ```
 
 First, run the development server:
