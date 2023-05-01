@@ -1,7 +1,7 @@
 import Link from "next/link";
 import styles from "./Navbar.module.css";
 
-type Pages = "home" | "about";
+type Pages = "home" | "about" | "portfolios";
 
 export const Navbar = ({ activePage = "home" }: { activePage: Pages }) => {
   return (
@@ -14,10 +14,16 @@ export const Navbar = ({ activePage = "home" }: { activePage: Pages }) => {
         </li>
         <li>
           <Link
-            className={activePage === "about" ? styles.active : ""}
-            href="/about"
+            className={activePage === "about" ? styles.active : ""} href="/about"
           >
             About
+          </Link>
+        </li>
+        <li>
+          <Link
+            className={activePage === "portfolios" ? styles.active : ""} href="/portfolios"
+          >
+            Portfolios
           </Link>
         </li>
       </ul>
