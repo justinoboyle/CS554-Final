@@ -15,5 +15,6 @@ export const useHelloRoute = () => {
   return {
     data,
     error,
+    test,
   };
 };
