@@ -1,17 +1,18 @@
 import type { NextApiRequest, NextApiResponse } from "next";
+import { Portfolio } from '@prisma/client';
 
 import { errorHandler, Response } from "../../../helpers/errors";
-import { createUser, SanitizedUser } from "../../../helpers/userHelper";
+import { createPortfolio } from "../../../helpers/portfolioHelper";
 
 const endpoint = async (
   req: NextApiRequest
-): Promise<Response<SanitizedUser>> => {
-  const { email, password, name } = req.body;
+): Promise<Response<Portfolio>> => {
+  const { title } = req.body;
 
-  const user = await createUser(email, password, name);
+  const portfolio = await createPortfolio(title);
 
   return {
-    data: user,
+    data: portfolio,
     statusCode: 200,
     failed: false,
   };
