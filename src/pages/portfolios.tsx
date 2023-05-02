@@ -7,6 +7,7 @@ import { Navbar } from "../components/Navbar";
 
 
 export default function Home() {
+  // Helper function fetch list of portfolios?
 
   return (
     <>
@@ -21,7 +22,7 @@ export default function Home() {
         <div className={styles.content}>
           <h1 className={styles.title}>Portfolios</h1>
           <div>
-            hello
+            List of portfolios go here
           </div>
         </div>
       </main>
