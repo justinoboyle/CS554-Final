@@ -6,12 +6,15 @@ import {
 } from "./errors";
 
 export const createPortfolio = async (
-  title: String
+  title: string
 ): Promise<Portfolio> => {
   const prisma = new PrismaClient();
 
-  // Red line here on portfolio
   const portfolio = await prisma.portfolio.create({
-
+    data: {
+      title,
+    }
   });
+
+  return portfolio;
 }
