@@ -22,6 +22,7 @@ model User {
   name            String?
   role            Role     @default(USER)
   passwordBcrypt  String?
+  portfolioIds    String[]
 }
 
 model StockPosition {
@@ -31,7 +32,8 @@ model StockPosition {
 }
 
 model Portfolio {
-  id              String            @id @default(auto()) @map("_id") @db.ObjectId
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
   title           String
-  positions       String[]          @default([])
+  positions       String[]  @default([])
+  userId          String    @db.ObjectId
 }
