@@ -28,12 +28,10 @@ model StockPosition {
   id              String    @id @default(auto()) @map("_id") @db.ObjectId
   createdAt       DateTime  @default(now())
   amount          Int
-  portfolio       Portfolio @relation(fields: [portfolioId], references: [id])
-  portfolioId     String    @db.ObjectId
 }
 
 model Portfolio {
-  id              String @id @default(auto()) @map("_id") @db.ObjectId
-  title           String?
-  positions       StockPosition[]
+  id              String            @id @default(auto()) @map("_id") @db.ObjectId
+  title           String
+  positions       String[]          @default([])
 }
