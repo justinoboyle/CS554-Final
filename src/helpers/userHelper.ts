@@ -1,4 +1,4 @@
-import { PrismaClient, User } from "@prisma/client";
+import { PrismaClient, User, Portfolio } from "@prisma/client";
 import bcrypt from "bcrypt";
 import {
   AlreadyExistsError,
@@ -6,12 +6,14 @@ import {
   UserError,
   BadRequestError,
 } from "./errors";
+import { getPortfolioById } from "./portfolioHelper";
 
 // Don't send hashed password back to user
 export type SanitizedUser = {
   id: string;
   email: string;
   name?: string;
+  portfolioIds: string[];
 };
 
 export const createUser = async (
@@ -79,6 +81,7 @@ export const sanitizeUser = (user: User): SanitizedUser => {
     id: user.id,
     email: user.email,
     name: user?.name || undefined,
+    portfolioIds: user.portfolioIds,
   };
 };
 
@@ -97,3 +100,17 @@ export const getUserById = async (
 
   return sanitizeUser(user);
 };
+
+export const getUserPortfolios = async(
+  id: string
+): Promise<Portfolio[]> => {
+  const prisma = new PrismaClient();
+
+  const user = await getUserById(id);
+
+  if (!user) throw new NotFoundError("User not found");
+
+  let portfolios = Promise.all(user.portfolioIds.map(async (portfolioId) => await getPortfolioById(portfolioId)));
+
+  return portfolios;
+}

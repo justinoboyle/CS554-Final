@@ -16,10 +16,24 @@ enum Role {
 }
 
 model User {
-  id              String   @id @default(auto()) @map("_id") @db.ObjectId
-  createdAt       DateTime @default(now())
-  email           String   @unique
-  name            String?
-  role            Role     @default(USER)
-  passwordBcrypt  String?
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt      DateTime @default(now())
+  email          String   @unique
+  name           String?
+  role           Role     @default(USER)
+  passwordBcrypt String?
+  portfolioIds   String[]
+}
+
+model StockPosition {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt DateTime @default(now())
+  amount    Int
+}
+
+model Portfolio {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  title     String
+  userId    String
+  positions String[] @default([])
 }
