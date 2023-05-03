@@ -17,5 +17,7 @@ const endpoint = async (
   };
 };
 
-export const handler = (req: NextApiRequest, res: NextApiResponse) =>
+const handler = (req: NextApiRequest, res: NextApiResponse) =>
   errorHandler(req, res, endpoint);
+
+export default handler;

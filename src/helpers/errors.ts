@@ -57,6 +57,7 @@ export const errorHandler = async (
         statusCode: e._statusCode,
       });
     } else {
+      console.log(e);
       res.status(500).json({
         error: "Internal Server Error",
         failed: true,
