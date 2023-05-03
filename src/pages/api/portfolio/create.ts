@@ -6,17 +6,27 @@ import { createPortfolio } from "../../../helpers/portfolioHelper";
 
 const endpoint = async (
   req: NextApiRequest
-): Promise<Response<Portfolio>> => {
-  const { title } = req.body;
+): Promise<Response<Portfolio | null>> => {
+  if (req.method === 'POST') {
+    const { title, userId } = req.body;
+  
+    const portfolio = await createPortfolio(title, userId);
 
-  const portfolio = await createPortfolio(title);
-
+    return {
+      data: portfolio,
+      statusCode: 200,
+      failed: false,
+    }
+  }
   return {
-    data: portfolio,
-    statusCode: 200,
-    failed: false,
-  };
+    data: null,
+    statusCode: 404,
+    failed: true,
+    error: "Route doesn't exist",
+  }
 };
 
-export const handler = (req: NextApiRequest, res: NextApiResponse) =>
+const handler = (req: NextApiRequest, res: NextApiResponse) =>
   errorHandler(req, res, endpoint);
+
+export default handler;
