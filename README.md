@@ -1,14 +1,17 @@
 ## Running the server
 
-You can either run a local MongoDB server, or use the staging/dev MongoDB server (if you have permission).
+### MongoDB Server
 
-### Local MongoDB server
-
-Set the `DATABASE_URL` environment variable to the URI of your local MongoDB server. You can do this by creating a `.env` file in the root directory of the project, and adding the following line:
+Set the `DATABASE_URL` environment variable to the URI of your MongoDB server. You can do this by creating a `.env` file in the root directory of the project, and adding the following line:
 
 ```
 DATABASE_URL=mongodb://127.0.0.1:27017
 ```
+
+If you're getting an error similar to `Prisma needs to perform transactions, which requires your MongoDB server to be run as a replica set.`, the easiest way to test is 
+by using a free MongoDB Atlas cluster. You can create a free cluster [here](https://www.mongodb.com/cloud/atlas/register). Once you've created a cluster, you can get the URI by clicking on the "Connect" button, and then clicking "Connect your application". You can then copy the URI and paste it into the `.env` file.
+
+## Running the Next.js server
 
 First, run the development server:
 

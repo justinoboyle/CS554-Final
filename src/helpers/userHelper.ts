@@ -16,6 +16,12 @@ export type SanitizedUser = {
   portfolioIds: string[];
 };
 
+export type UserSession = {
+  isLoggedIn: boolean;
+  login: string;
+  user?: SanitizedUser;
+};
+
 export const createUser = async (
   email: string,
   password: string,
@@ -101,16 +107,18 @@ export const getUserById = async (
   return sanitizeUser(user);
 };
 
-export const getUserPortfolios = async(
-  id: string
-): Promise<Portfolio[]> => {
+export const getUserPortfolios = async (id: string): Promise<Portfolio[]> => {
   const prisma = new PrismaClient();
 
   const user = await getUserById(id);
 
   if (!user) throw new NotFoundError("User not found");
 
-  let portfolios = Promise.all(user.portfolioIds.map(async (portfolioId) => await getPortfolioById(portfolioId)));
+  let portfolios = Promise.all(
+    user.portfolioIds.map(
+      async (portfolioId) => await getPortfolioById(portfolioId)
+    )
+  );
 
   return portfolios;
-}
+};
