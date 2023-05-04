@@ -1,16 +1,34 @@
 .navbar {
-  /* full sticky bar at the top of the screen */
-  position: fixed;
-  top: 0;
-  left: 0;
   width: 100%;
-  height: 30px;
   background-color: #333;
   color: #fff;
   display: flex;
 }
 
-.navbar > ul {
+.primary {
+  /* left side */
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  gap: 8px;
+
+  /* make the navbar responsive */
+  flex: 1;
+}
+
+.secondary {
+  /* right side */
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  gap: 8px;
+
+  /* align to right/flex end */
+  justify-content: flex-end;
+
+}
+
+.navbar ul {
   /* links on the left side of the navbar */
   margin-right: auto;
   display: flex;
@@ -18,12 +36,10 @@
 
   padding: 8px;
   gap: 8px;
-
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
 /* remove li dot */
-.navbar > ul > li {
+.navbar ul > li {
   list-style: none;
 }
 
@@ -32,6 +48,6 @@
 }
 
 /* turn gray when hovering over the links */
-.navbar > ul > li > a:hover {
+.navbar ul > li > a:hover {
   color: #ccc;
 }
