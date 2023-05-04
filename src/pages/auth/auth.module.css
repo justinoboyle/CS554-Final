@@ -1,0 +1,77 @@
+/* log in screen, center aligned in middle */
+
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.form {
+  width: 400px;
+  padding: 40px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+}
+
+.form h1 {
+  margin-bottom: 8px;
+}
+
+.formGroup {
+  margin-bottom: 8px;
+}
+.formGroup button {
+  padding: 8px;
+  border-radius: 4px;
+  border: none;
+  background-color: #333;
+  color: #fff;
+  font-weight: bold;
+}
+
+.formGroup button:hover {
+  background-color: #444;
+  cursor: pointer;
+}
+
+.error {
+  color: red;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.formGroup label {
+  margin-right: 8px;
+}
+
+/* disabled button */
+.formGroup button:disabled {
+  /* even darker */
+  background-color: #444;
+  color: #666;
+  cursor: not-allowed;
+}
+
+/* disabled button on hover */
+.formGroup button:disabled:hover {
+  background-color: #444;
+  color: #666;
+  cursor: not-allowed;
+}
+
+.formGroup {
+  display: flex;
+  align-items: center;
+}
+
+.register {
+  padding: 8px;
+  border-radius: 4px;
+  border: none;
+  background-color: none;
+  color: #fff;
+  font-weight: bold;
+  color: #666;
+  font-size: 12px;
+}

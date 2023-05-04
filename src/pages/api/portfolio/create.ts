@@ -1,12 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { Portfolio } from '@prisma/client';
 
-import { errorHandler, Response } from "../../../helpers/errors";
+import { constructHandler, InternalResponse } from "../../../helpers/errors";
 import { createPortfolio } from "../../../helpers/portfolioHelper";
 
 const endpoint = async (
   req: NextApiRequest
-): Promise<Response<Portfolio | null>> => {
+): Promise<InternalResponse<Portfolio | null>> => {
   if (req.method === 'POST') {
     const { title, userId } = req.body;
   
@@ -26,7 +26,4 @@ const endpoint = async (
   }
 };
 
-const handler = (req: NextApiRequest, res: NextApiResponse) =>
-  errorHandler(req, res, endpoint);
-
-export default handler;
+export default constructHandler(endpoint);
