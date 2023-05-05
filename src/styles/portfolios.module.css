@@ -14,8 +14,16 @@
   margin: 10px 0px;
 }
 
-.error {
+.form_message {
   padding: 5px 8px;
-  background-color: rgb(250, 71, 71);
   width: fit-content;
+  border-radius: 5px;
+}
+
+.error {
+  background-color: rgb(250, 71, 71);
+}
+
+.success {
+  background-color: rgb(14, 121, 0);
 }
