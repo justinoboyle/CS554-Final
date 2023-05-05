@@ -11,6 +11,7 @@ export default function Home() {
   const { user, isLoading } = useUser();
   const [title, setTitle] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [disabled, setDisabled] = useState(false);
 
   async function handleSubmit(e: any) {
@@ -25,12 +26,20 @@ export default function Home() {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({title, userId: user.id}), // Complains about user undefined here
+      body: JSON.stringify({title, userId: user?.id}), // Complains about user undefined here
     });
+    if (response.ok) {
+      setSuccess(`Successfully created portfolio \'${title}\'`);
+    } else {
+      setError("Unable to create portfolio");
+    }
+    setDisabled(false);
   }
 
   if (isLoading) {
-
+    <div className={styles.content}>
+      Loading...
+    </div>
   } else {
     return (
       <>
@@ -55,7 +64,8 @@ export default function Home() {
                 disabled={isLoading || disabled}
               />
               <button className={styles.form_group} type='submit'>Submit</button>
-              {error && <p className={styles.error}>{error}</p>}  
+              {error && <p className={`${styles.form_message} ${styles.error}`}>{error}</p>}  
+              {success && <p className={`${styles.form_message} ${styles.success}`}>{success}</p>}
             </form>
             <div>
               List of portfolios go here
