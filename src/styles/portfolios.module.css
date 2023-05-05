@@ -5,3 +5,17 @@
 .title {
   color: white;
 }
+
+.form {
+  margin: 15px;
+}
+
+.form_group {
+  margin: 10px 0px;
+}
+
+.error {
+  padding: 5px 8px;
+  background-color: rgb(250, 71, 71);
+  width: fit-content;
+}
