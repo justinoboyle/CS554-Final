@@ -1,4 +1,4 @@
-import { PrismaClient, User, Portfolio } from "@prisma/client";
+import { PrismaClient, User, Portfolio, StockEODData } from "@prisma/client";
 import bcrypt from "bcrypt";
 import {
   AlreadyExistsError,
@@ -14,6 +14,7 @@ export type SanitizedUser = {
   email: string;
   name?: string;
   portfolioIds: string[];
+  watchlist: string[];
 };
 
 export type UserSession = {
@@ -88,6 +89,7 @@ export const sanitizeUser = (user: User): SanitizedUser => {
     email: user.email,
     name: user?.name || undefined,
     portfolioIds: user.portfolioIds,
+    watchlist: user.watchlist,
   };
 };
 
@@ -122,3 +124,27 @@ export const getUserPortfolios = async (id: string): Promise<Portfolio[]> => {
 
   return portfolios;
 };
+
+export const getUserWatchlist = async (id: string): Promise<StockEODData[]> => {
+  const prisma = new PrismaClient();
+
+  const user = await getUserById(id);
+
+  if (!user) throw new NotFoundError("User not found");
+
+  let watchlist = Promise.all(
+    user.watchlist.map(
+      async (stockId) => {
+        let stock = await prisma.stockEODData.findUnique({
+          where: {
+            id: stockId,
+          }
+        });
+        if (!stock) throw new NotFoundError("Stock not found");
+        return stock;
+      }
+    )
+  )
+  
+  return watchlist;
+}
