@@ -37,3 +37,22 @@ model Portfolio {
   userId    String
   positions String[] @default([])
 }
+
+model StockEODData {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  open         Float
+  low          Float
+  high         Float
+  close        Float
+  volume       Float
+  adj_high     Float
+  adj_low      Float
+  adj_close    Float
+  adj_open     Float
+  adj_volume   Float
+  split_factor Float
+  dividend     Float
+  symbol       String
+  exchange     String
+  date         DateTime
+}
