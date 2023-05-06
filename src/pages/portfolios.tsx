@@ -50,8 +50,11 @@ function Portfolios() {
     for (let portfolio of portfolios) {
       result.push(
         <div className={styles.portfolio_wrapper} key={portfolio.id}>
-          <h2>{portfolio.title}</h2>
-          <p>{portfolio.positions.length>0 ? portfolio.positions : "No stocks in portfolio"}</p>
+          <div className={styles.portfolio_information}>
+            <h2>{portfolio.title}</h2>
+            <p>{portfolio.positions.length>0 ? portfolio.positions : "No stocks in portfolio"}</p>
+          </div>
+          <button className={styles.add_button}>Add stock</button>
         </div>
       )
     }
