@@ -109,26 +109,27 @@ export const getUserById = async (
   return sanitizeUser(user);
 };
 
-export const getUserPortfolios = async (id: string): Promise<Portfolio[]> => {
+export const getUserPortfolios = async (userId: string | undefined): Promise<Portfolio[]> => {
+  if (!userId) throw new BadRequestError("Invalid user ID");
+  
   const prisma = new PrismaClient();
+  const portfolios = await prisma.portfolio.findMany({
+    where: {
+      userId,
+    }
+  });
 
-  const user = await getUserById(id);
-
-  if (!user) throw new NotFoundError("User not found");
-
-  let portfolios = Promise.all(
-    user.portfolioIds.map(
-      async (portfolioId) => await getPortfolioById(portfolioId)
-    )
-  );
-
+  if (!portfolios) {
+    return [];
+  }
   return portfolios;
 };
 
-export const getUserWatchlist = async (id: string): Promise<StockEODData[]> => {
-  const prisma = new PrismaClient();
+export const getUserWatchlist = async (userId: string): Promise<StockEODData[]> => {
+  if (!userId) throw new BadRequestError("Invalid user ID");
 
-  const user = await getUserById(id);
+  const prisma = new PrismaClient();
+  const user = await getUserById(userId);
 
   if (!user) throw new NotFoundError("User not found");
 
