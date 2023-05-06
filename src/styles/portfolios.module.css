@@ -41,17 +41,34 @@
   transition: 0.3s;
 }
 
-.add_button {
+.button_wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.button {
+  margin: 2px;
   padding: 5px;
   margin-left: 15px;
-  background-color: rgb(0, 163, 0);
   border: none;
   border-radius: 3px;
   flex-grow: 1;
 }
 
+.add_button {
+  background-color: rgb(0, 163, 0);
+}
+
 .add_button:hover {
   background-color: rgb(0, 107, 0);
+}
+
+.delete_button {
+  background-color: rgb(255, 32, 32);
+}
+
+.delete_button:hover {
+  background-color: rgb(153, 0, 0);
 }
 
 .error {
