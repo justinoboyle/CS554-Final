@@ -16,13 +16,14 @@ export default function Watchlist() {
         <div className={styles.body}>
           <h1 className={styles.title}>Stocks of interest (mock data)</h1>
           <form className={styles.form}>
-            <label>Add stock to watchlist</label>
+            <label className={styles.form_group}>Add stock to watchlist</label>
             <br/>
             <input 
+              className={styles.form_group}
               name="symbol"
               placeholder="Enter a stock symbol"
             />
-            <button type='submit'>Submit</button>
+            <button className={styles.form_group} type='submit'>Submit</button>
           </form>
           <div className={styles.container}>
             Watchlist goes here
