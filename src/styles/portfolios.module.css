@@ -20,6 +20,19 @@
   border-radius: 5px;
 }
 
+.portfolio_wrapper {
+  margin-bottom: 20px;
+  padding: 30px 15px;
+  border: 1px solid lightgray;
+  border-radius: 5px;
+}
+
+.portfolio_wrapper:hover {
+  background-color: rgb(136, 136, 136);
+  color: black;
+  transition: 0.3s;
+}
+
 .error {
   background-color: rgb(250, 71, 71);
 }
