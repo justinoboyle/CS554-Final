@@ -5,15 +5,16 @@ import { Navbar } from "../components/Navbar";
 import { usePortfolios } from '../hooks/usePortfolios';
 
 import styles from '@/styles/portfolios.module.css'
+import { Portfolio } from "@prisma/client";
 
 function Portfolios() {
   const { data, error } = usePortfolios();
-  const [userId, setUserId] = useState(undefined);
-  const [portfolios, setPortfolios] = useState(undefined);
-  const [title, setTitle] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
-  const [disabled, setDisabled] = useState(false);
+  const [userId, setUserId] = useState<string>("");
+  const [portfolios, setPortfolios] = useState<Portfolio[]>([]);
+  const [title, setTitle] = useState<string>("");
+  const [errorMessage, setErrorMessage] = useState<string>("");
+  const [successMessage, setSuccessMessage] = useState<string>("");
+  const [disabled, setDisabled] = useState<boolean>(false);
 
   useEffect(() => {
     if (data) {
@@ -24,6 +25,8 @@ function Portfolios() {
 
   async function handleSubmit(e: any) {
     e.preventDefault();
+    setErrorMessage('');
+    setSuccessMessage('');
     if (title.trim().length === 0) {
       setErrorMessage("Please enter a title");
       return;
@@ -38,6 +41,9 @@ function Portfolios() {
     });
     if (response.ok) {
       setSuccessMessage(`Successfully created portfolio \'${title}\'`);
+      let json = await response.json();
+      let newPortfolio = json.data as Portfolio;
+      setPortfolios([...portfolios, newPortfolio]);
     } else {
       setErrorMessage("Unable to create portfolio");
       return;
@@ -45,7 +51,14 @@ function Portfolios() {
     setDisabled(false);
   }
 
+  function handleDelete(portfolioId: string) {
+    
+    let newPortfolios = portfolios.filter((portfolio) => portfolio.id !== portfolioId);
+    setPortfolios(newPortfolios);
+  }
+
   function buildPortfolios() {
+    if (!portfolios) return <h2>Could not load user portfolios</h2>;
     let result = [];
     for (let portfolio of portfolios) {
       result.push(
@@ -54,7 +67,10 @@ function Portfolios() {
             <h2>{portfolio.title}</h2>
             <p>{portfolio.positions.length>0 ? portfolio.positions : "No stocks in portfolio"}</p>
           </div>
-          <button className={styles.add_button}>Add stock</button>
+          <div className={styles.button_wrapper}>
+            <button className={`${styles.button} ${styles.add_button}`}>Add stock</button>
+            <button className={`${styles.button} ${styles.delete_button}`}>Delete portfolio</button>
+          </div>
         </div>
       )
     }
