@@ -3,25 +3,28 @@ import { PrismaClient, Portfolio } from "@prisma/client";
 
 import type { UserSession } from "../../../helpers/userHelper";
 import { InternalResponse, constructHandler } from "@/helpers/errors";
+import { getUserPortfolios } from "@/helpers/userHelper";
+
+export type Data = {
+  userId: string | undefined;
+  portfolios: Portfolio[];
+}
 
 const endpoint = async (
   req: NextApiRequest,
   session?: UserSession
-): Promise<InternalResponse<Portfolio[]>> => {
+): Promise<InternalResponse<Data>> => {
   const prisma = new PrismaClient();
 
-  const portfolios = await prisma.portfolio.findMany({
-    where: {
-      userId: session?.user?.id,
-    }
-  });
-
-  console.log(portfolios);
+  const portfolios = await getUserPortfolios(session?.user?.id);
 
   return {
     failed: false,
     statusCode: 200,
-    data: portfolios,
+    data: {
+      userId: session?.user?.id,
+      portfolios,
+    },
   }
 };
 
