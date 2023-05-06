@@ -10,7 +10,7 @@ export const usePortfolios = () => {
     const data = await res.json();
     return data;
   };
-  const { data, error } = useSWR<Data, Error>("/api/portfolio/get", fetcher);
+  const { data, error } = useSWR<any, Error>("/api/portfolio/get", fetcher);
 
   return {
     data,
