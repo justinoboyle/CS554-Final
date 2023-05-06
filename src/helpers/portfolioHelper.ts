@@ -9,6 +9,8 @@ export const createPortfolio = async (
   title: string,
   userId: string,
 ): Promise<Portfolio> => {
+  if (!userId) throw new NotFoundError("User not found");
+
   const prisma = new PrismaClient();
 
   const portfolio = await prisma.portfolio.create({
@@ -21,14 +23,13 @@ export const createPortfolio = async (
   return portfolio;
 }
 
-export const getPortfolioById = async (
-  id: string
-): Promise<Portfolio> => {
-  const prisma = new PrismaClient();
+export const getPortfolioById = async (portfolioId: string | undefined): Promise<Portfolio> => {
+  if (!portfolioId) throw new NotFoundError("User not found");
 
+  const prisma = new PrismaClient();
   const portfolio = await prisma.portfolio.findUnique({
     where: {
-      id,
+      id: portfolioId,
     }
   });
 
