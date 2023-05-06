@@ -1,13 +1,14 @@
 import Head from "next/head";
-import { useState } from 'react';
+import { Portfolio } from "@prisma/client";
+import { useState, useEffect } from 'react';
 
 import { Navbar } from "../components/Navbar";
 import useUser from "../hooks/useUser"
 
+import { getUserPortfolios } from "@/helpers/userHelper";
 import styles from '@/styles/portfolios.module.css'
 
-
-export default function Home() {
+function Portfolios({ portfolios }: any) {
   const { user, isLoading } = useUser();
   const [title, setTitle] = useState("");
   const [error, setError] = useState("");
@@ -32,11 +33,12 @@ export default function Home() {
       setSuccess(`Successfully created portfolio \'${title}\'`);
     } else {
       setError("Unable to create portfolio");
+      return;
     }
     setDisabled(false);
   }
 
-  if (isLoading) {
+  if (isLoading && !portfolios) {
     <div className={styles.content}>
       Loading...
     </div>
@@ -68,7 +70,13 @@ export default function Home() {
               {success && <p className={`${styles.form_message} ${styles.success}`}>{success}</p>}
             </form>
             <div>
-              List of portfolios go here
+              {portfolios.map((portfolio: Portfolio) => {
+                return (
+                  <div>
+                    <h2>{portfolio.title}</h2>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </main>
@@ -76,3 +84,11 @@ export default function Home() {
     );
   }
 }
+
+Portfolios.getInitialProps = async () => {
+  const response = await fetch('/api/portfolio/get');
+  const json = await response.json();
+  return { portfolios: json.data };
+}
+
+export default Portfolios;
