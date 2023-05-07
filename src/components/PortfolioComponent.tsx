@@ -38,7 +38,7 @@ export const PortfolioComponent = (props: Props) => {
             }
         };
         fetchData
-    }, []);
+    }, [portfolioId]);
 
     if(loading) return (<p>Loading Position Data...</p>);
     if(!portfolioData || !returnData) return (<p>Error: Failed to fetch Portfolio</p>)

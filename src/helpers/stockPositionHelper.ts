@@ -11,14 +11,16 @@ type StockPositionReturns = {
 }
 
 export const createStockPosition = async (
-    createdAt: string,
-    amount: string,
+    createdAt: Date,
+    ticker: string,
+    amount: number,
 ): Promise<StockPosition> => {
     const prisma = new PrismaClient();
 
-    const stockPosition = await prisma.stockPosition.create({  // TODO: check stockposition name (p vs P)
+    const stockPosition = await prisma.stockPosition.create({
         data: {
             createdAt,
+            ticker,
             amount
         }
     });

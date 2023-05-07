@@ -56,7 +56,7 @@ export const StockPositionComponent = (props: Props) => {
             }
         };
         fetchData
-    }, []);
+    }, [positionId, positionObj]);
 
     if(loading) return (<p>Loading...</p>);
     if(!stockPositionData || !returnData) return (<p>Error: Failed to fetch Stock Position</p>)
