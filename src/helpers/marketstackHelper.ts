@@ -110,6 +110,8 @@ export const persistEODDataByDay = async (
       adj_open: eodData.adj_open,
       adj_volume: eodData.adj_volume,
       exchange: eodData.exchange,
+      dividend: 0,
+      split_factor: 0,
     },
   });
 
@@ -145,4 +147,3 @@ export const persistEODDataForPastNYears = async (
 
   return persistedEodData;
 };
- 
