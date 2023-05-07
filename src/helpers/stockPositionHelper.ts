@@ -16,7 +16,7 @@ export const createStockPosition = async (
 ): Promise<StockPosition> => {
     const prisma = new PrismaClient();
 
-    const stockPosition = await prisma.stockposition.create({  // TODO: check stockposition name (p vs P)
+    const stockPosition = await prisma.stockPosition.create({  // TODO: check stockposition name (p vs P)
         data: {
             createdAt,
             amount
@@ -31,7 +31,7 @@ export const getStockPositionById = async (
   ): Promise<StockPosition> => {
     const prisma = new PrismaClient();
   
-    const stockPosition = await prisma.stockposition.findUnique({
+    const stockPosition = await prisma.stockPosition.findUnique({
       where: {
         id,
       }
@@ -43,19 +43,19 @@ export const getStockPositionById = async (
 };
 
 // TODO
-export const getPriceAtTime = (  // TODO: Don't forget to make async once actually functioning
+export const getPriceAtTime = async (
     ticker: string,
     time: Date
-) : number => {
-    return 10
+) : Promise<number> => {
+    return 10;
 }
 
 export const calculateStockPositionReturns = (
-    stockPosition: StockPosition
+    stockPosition: StockPosition,
+    purchasePrice: number,
+    currentPrice: number,
   ): StockPositionReturns => {
-    const purchasePrice = getPriceAtTime("TODO: get ticker", stockPosition.createdAt);  // TODO: get price at createdAt
-    const currentPrice = getPriceAtTime("TODO: get ticker", new Date());  // TODO: get price at now
-    const returns = {
+   const returns = {
         asAmount: (currentPrice - purchasePrice) * stockPosition.amount,
         asPercentage: (currentPrice - purchasePrice) / purchasePrice
     }

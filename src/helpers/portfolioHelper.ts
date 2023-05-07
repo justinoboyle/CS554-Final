@@ -1,22 +1,11 @@
 // Red line here on Portfolio
 import { PrismaClient, Portfolio, StockPosition } from "@prisma/client";
-<<<<<<< HEAD
-import { 
-  getStockPositionById, 
-  calculateStockPositionReturns, 
-  getPriceAtTime 
-} from '../helpers/StockPositionHelper'
-import {
-  NotFoundError,
-  BadRequestError
-} from "./errors";
-=======
+import { getPriceAtTime } from '../helpers/stockPositionHelper';
 import { NotFoundError, BadRequestError } from "./errors";
 
 export type PortfolioWithPositions = Portfolio & {
   positions: StockPosition[];
 };
->>>>>>> 6009341fe826779e76fb4a4de3fa935eefdfdee6
 
 type PortfolioReturns = {
   asAmount: number,
@@ -63,10 +52,10 @@ export const getPortfolioById = async (
 
   return portfolio;
 };
-<<<<<<< HEAD
 
+// takes portfolio with positions
 export const calculatePortfolioReturns = async (
-  portfolio: Portfolio
+  portfolio: PortfolioWithPositions
 ): Promise<PortfolioReturns> => {
   const portfolioPositions = portfolio.positions;
   let totalReturns = 0;
@@ -74,17 +63,15 @@ export const calculatePortfolioReturns = async (
 
   Promise.all(
     portfolioPositions.map(async (stockPosition : StockPosition) => {
-      const currStockPosition = await getStockPositionById(stockPosition);
-      const purchasePrice = getPriceAtTime("TODO: get ticker", currStockPosition.createdAt);  // TODO: get price at createdAt
-      initialInvestment += currStockPosition.amount * purchasePrice;  // cost basis
-      totalReturns += calculateStockPositionReturns(currStockPosition).asAmount;
+      const purchasePrice = await getPriceAtTime(stockPosition.ticker, stockPosition.createdAt);
+      const currentPrice = await getPriceAtTime(stockPosition.ticker, new Date());
+      initialInvestment += stockPosition.amount * purchasePrice;  // cost basis
+      totalReturns += (currentPrice - purchasePrice) * stockPosition.amount;
     })
   );
 
   return {
     asAmount: totalReturns,
     asPercentage: totalReturns / initialInvestment
-  }
+  };
 };
-=======
->>>>>>> 6009341fe826779e76fb4a4de3fa935eefdfdee6

@@ -2,12 +2,13 @@ import {
     getStockPositionById,
     calculateStockPositionReturns,
     getPriceAtTime 
-} from '../helpers/StockPositionHelper'
+} from '../helpers/stockPositionHelper'
 import { useState, useEffect } from 'react';
-import { Portfolio, StockPosition } from "@prisma/client";
+import { StockPosition } from "@prisma/client";
 
 type Props = {
-    key: string
+    key: string,
+    positionObj: StockPosition
 }
 
 type StockPositionReturns = {
@@ -18,7 +19,10 @@ type StockPositionReturns = {
 // takes position id as key from props
 export const StockPositionComponent = (props: Props) => {
     const positionId = props.key;
+    const positionObj = props.positionObj;
     const [stockPositionData, setStockPositionData] = useState<StockPosition | undefined>(undefined);
+    const [currentPrice, setCurrentPrice] = useState<number>(0);
+    const [purchasePrice, setPurchasePrice] = useState<number>(0);
     const [returnData, setReturnData] = useState<StockPositionReturns | undefined>(undefined);
     const [loading, setLoading] = useState(true);
 
@@ -27,13 +31,22 @@ export const StockPositionComponent = (props: Props) => {
             try {
                 setLoading(true);  // shouldn't be needed but as a precaution
 
-                const data = await getStockPositionById(positionId);
-                data.currentPrice = await getPriceAtTime("TODO: get ticker", data.createdAt);
-                data.purchasePrice = await getPriceAtTime("TODO: get ticker", new Date());
+                let data;  // load data only if needed
+                if(!positionObj){
+                    data = await getStockPositionById(positionId);
+                }
+                else{
+                    data = positionObj;
+                }
+                
+                const currentPrice = await getPriceAtTime(data.ticker, data.createdAt);
+                const purchasePrice = await getPriceAtTime(data.ticker, new Date());
 
-                const returns = await calculateStockPositionReturns(data);
+                const returns = await calculateStockPositionReturns(data, purchasePrice, currentPrice);
 
                 setStockPositionData(data);
+                setCurrentPrice(currentPrice);
+                setPurchasePrice(purchasePrice);
                 setReturnData(returns);
                 setLoading(false);
 
@@ -49,8 +62,8 @@ export const StockPositionComponent = (props: Props) => {
     if(!stockPositionData || !returnData) return (<p>Error: Failed to fetch Stock Position</p>)
 
     return (
-        <div id={stockPositionData?.id}>
-            <h3>TODO: Ticker Name</h3>
+        <div id={stockPositionData.id}>
+            <h3>stockPositionData.ticker</h3>
             <table>
                 <tr>
                     <th>Amount Held</th>
@@ -62,10 +75,10 @@ export const StockPositionComponent = (props: Props) => {
                 </tr>
                 <tr>
                     <th>{stockPositionData.amount}</th>
-                    <th>{stockPositionData.currentPrice}</th>
-                    <th>{stockPositionData.purchasePrice}</th>
+                    <th>{currentPrice}</th>
+                    <th>{purchasePrice}</th>
                     <th>{returnData.asAmount} ({returnData.asPercentage})</th>
-                    <th>{stockPositionData.currentPrice * stockPositionData.amount}</th>
+                    <th>{currentPrice * stockPositionData.amount}</th>
                     {/* TODO: Format Date */}
                     <th>{stockPositionData.createdAt.toString()}</th>
                 </tr>
