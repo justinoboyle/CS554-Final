@@ -36,12 +36,18 @@ const getMostRecentClosePrice = async (
   return mostRecentClosePrice;
 };
 
+const logDebug = (step: string, message: string) => {
+  console.log(`[${step}] ${message}`);
+};
+
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   // get all tracked stocks
   // for each stock, get the latest close price and the date
   // then persist in db
 
   const trackedSecurities = await getAllUniqueTrackedTickers();
+
+  logDebug("Tracked securities", JSON.stringify(trackedSecurities));
 
   // missing tickers
   const missingTickers: string[] = [];
@@ -59,6 +65,11 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       })
     )
   ).filter((p) => p !== null) as StockEODData[];
+
+  logDebug(
+    "Most recent close prices count",
+    mostRecentClosePrices.length.toString()
+  );
 
   type TickerQuery = {
     ticker: string;
@@ -90,6 +101,8 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   const endDate = isWeekend
     ? fetchFor.day(fetchFor.day() === 0 ? -2 : -1)
     : fetchFor;
+
+  logDebug("Fetching for", endDate.format("YYYY-MM-DD"));
 
   // we're going to generate the missing date ranges from [Jan 1 2013, fetchFor] inclusive. for any gaps, we'll need a TickerQuery entry
 
@@ -124,6 +137,8 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     }
   }
 
+  logDebug("Entries length", entries.length.toString());
+
   // if there are no entries, we're done
   if (entries.length === 0) {
     res.status(200).json({
@@ -148,6 +163,8 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     )
   ).reduce((acc, val) => acc.concat(val), []);
 
+  logDebug("Fetch results length", fetchResults.length.toString());
+
   const persistResults = await Promise.all(
     fetchResults.map(async (data) => {
       const { symbol, date, close } = data;
@@ -155,6 +172,8 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     })
   );
 
+  logDebug("Persist results length", persistResults.length.toString());
+  
   res.status(200).json({
     success: true,
     message: "Successfully fetched and persisted data",
