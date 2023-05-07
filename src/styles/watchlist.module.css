@@ -1,0 +1,19 @@
+.body {
+  margin: 20px;
+}
+
+.title {
+  font-size: 35px;
+}
+
+.container {
+  margin-top: 8 px;
+}
+
+.form {
+  margin: 15px;
+}
+
+.form_group {
+  margin: 10px 0px;
+}
