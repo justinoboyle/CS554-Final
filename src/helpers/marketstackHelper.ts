@@ -34,7 +34,6 @@ export const getEODDataByDay = async (
   symbol: string,
   date: string
 ): Promise<MarketstackEod> => {
-
   const { data } = await axios.get(
     `http://api.marketstack.com/v1/eod?access_key=${MARKETSTACK_API_KEY}&symbols=${symbol}&date_from=${date}&date_to=${date}`
   );
@@ -135,6 +134,9 @@ export const persistEODDataForPastNYears = async (
 
   const eodData = await getEODDataByDateRange(symbol, dateFrom, dateTo);
 
+  // if invalid, stop and throw error immediately
+  if (!eodData.length) throw new Error("Can't find that security");
+
   const persistedEodData = await Promise.all(
     eodData.map(async (eod) => {
       const persistedEod = await persistEODDataByDay(eod);
@@ -143,4 +145,38 @@ export const persistEODDataForPastNYears = async (
   );
 
   return persistedEodData;
+};
+
+export const doesSecurityExist = async (symbol: string): Promise<boolean> => {
+  const prisma = new PrismaClient();
+
+  // see if we have any EOD data for it?
+  const eodData = await prisma.stockEODData.findMany({
+    where: {
+      symbol,
+    },
+  });
+
+  if (eodData.length) return true;
+
+  // check if we have it in any tracked positions in our db
+
+  const trackedPositions = await prisma.stockPosition.findMany({
+    where: {
+      ticker: symbol,
+    },
+  });
+
+  if (trackedPositions.length) return true;
+
+  // if not, try to get data for it from marketstack for past year
+  try {
+    await persistEODDataForPastNYears(symbol, 1);
+    return true;
+  } catch (error) {
+    return false;
+  }
+
+  // if that fails, return false
+  return false;
 };

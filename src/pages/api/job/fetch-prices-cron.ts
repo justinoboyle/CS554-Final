@@ -173,7 +173,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   );
 
   logDebug("Persist results length", persistResults.length.toString());
-  
+
   res.status(200).json({
     success: true,
     message: "Successfully fetched and persisted data",
