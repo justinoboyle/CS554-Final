@@ -5,3 +5,76 @@
 .title {
   color: white;
 }
+
+.form {
+  margin: 15px;
+}
+
+.form_group {
+  margin: 10px 0px;
+}
+
+.form_message {
+  padding: 5px 8px;
+  width: fit-content;
+  border-radius: 5px;
+}
+
+.portfolio_wrapper {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;  
+}
+
+.portfolio_information {
+  padding: 15px 30px;
+  border: 1px solid lightgray;
+  border-radius: 5px;
+  flex-grow: 30;
+}
+
+.portfolio_information:hover {
+  background-color: rgb(136, 136, 136);
+  color: black;
+  transition: 0.3s;
+}
+
+.button_wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.button {
+  margin: 2px;
+  padding: 5px;
+  margin-left: 15px;
+  border: none;
+  border-radius: 3px;
+  flex-grow: 1;
+}
+
+.add_button {
+  background-color: rgb(0, 163, 0);
+}
+
+.add_button:hover {
+  background-color: rgb(0, 107, 0);
+}
+
+.delete_button {
+  background-color: rgb(255, 32, 32);
+}
+
+.delete_button:hover {
+  background-color: rgb(153, 0, 0);
+}
+
+.error {
+  background-color: rgb(250, 71, 71);
+}
+
+.success {
+  background-color: rgb(14, 121, 0);
+}

@@ -23,6 +23,7 @@ model User {
   role           Role     @default(USER)
   passwordBcrypt String?
   portfolioIds   String[]
+  watchlist      String[]
 }
 
 model StockPosition {
