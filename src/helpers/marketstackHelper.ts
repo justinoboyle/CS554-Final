@@ -34,9 +34,6 @@ export const getEODDataByDay = async (
   symbol: string,
   date: string
 ): Promise<MarketstackEod> => {
-  /* https://api.marketstack.com/v1/eod
-    ? access_key = d1ced169f635b56f237730dc28479564
-    & symbols = AAPL*/
 
   const { data } = await axios.get(
     `http://api.marketstack.com/v1/eod?access_key=${MARKETSTACK_API_KEY}&symbols=${symbol}&date_from=${date}&date_to=${date}`
