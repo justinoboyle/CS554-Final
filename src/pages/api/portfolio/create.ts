@@ -4,16 +4,18 @@ import { Portfolio } from '@prisma/client';
 import { constructHandler, InternalResponse } from "../../../helpers/errors";
 import { createPortfolio } from "../../../helpers/portfolioHelper";
 
+import type { PortfolioWithPositions } from "../../../helpers/portfolioHelper";
+
 const endpoint = async (
   req: NextApiRequest
-): Promise<InternalResponse<Portfolio | null>> => {
-  if (req.method !== 'POST') {
+): Promise<InternalResponse<PortfolioWithPositions | null>> => {
+  if (req.method !== "POST") {
     return {
       data: null,
       statusCode: 405,
       failed: true,
       error: "Method not allowed",
-    }
+    };
   }
 
   const { title, userId } = req.body;
@@ -24,7 +26,7 @@ const endpoint = async (
       statusCode: 400,
       failed: true,
       error: "Title and user ID are required",
-    }
+    };
   }
 
   const portfolio = await createPortfolio(title, userId);
@@ -33,7 +35,7 @@ const endpoint = async (
     data: portfolio,
     statusCode: 200,
     failed: false,
-  }
+  };
 };
 
 export default constructHandler(endpoint);
