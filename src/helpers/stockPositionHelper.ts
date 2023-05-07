@@ -1,9 +1,8 @@
 // Red line here on Portfolio
 import { PrismaClient, StockPosition } from "@prisma/client";
-import {
-    NotFoundError,
-    BadRequestError
-} from "./errors";
+import { NotFoundError } from "./errors";
+import { MARKETSTACK_API_KEY, MarketstackResponse, MarketstackEod } from "./marketstackHelper"
+import axios from "axios";
 
 type StockPositionReturns = {
     asAmount: number,
@@ -44,12 +43,20 @@ export const getStockPositionById = async (
     return stockPosition;
 };
 
-// TODO
+// TODO: Needs more testing
 export const getPriceAtTime = async (
     ticker: string,
     time: Date
 ) : Promise<number> => {
-    return 10;
+    const { data } = await axios.get(
+        `http://api.marketstack.com/v1/eod?access_key=${MARKETSTACK_API_KEY}&symbols=${ticker}&date_from=${time}&date_to=${time}`
+      );
+    
+      const { data: eodData } = data as MarketstackResponse<MarketstackEod[]>;
+    
+      if (!eodData.length) throw new Error("No data found");
+    
+      return eodData[0].close;
 }
 
 export const calculateStockPositionReturns = (
