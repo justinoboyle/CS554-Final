@@ -4,17 +4,10 @@ import {
     getPriceAtTime 
 } from '../helpers/StockPositionHelper'
 import { useState, useEffect } from 'react';
+import { Portfolio, StockPosition } from "@prisma/client";
 
 type Props = {
     key: string
-}
-
-type StockPositionObject = {
-    id: string
-    createdAt: Date 
-    amount: number,
-    currentPrice: number,
-    purchasePrice: number,
 }
 
 type StockPositionReturns = {
@@ -23,9 +16,9 @@ type StockPositionReturns = {
 }
 
 // takes position id as key from props
-export const StockPosition = (props: Props) => {
+export const StockPositionComponent = (props: Props) => {
     const positionId = props.key;
-    const [stockPositionData, setStockPositionData] = useState<StockPositionObject | undefined>(undefined);
+    const [stockPositionData, setStockPositionData] = useState<StockPosition | undefined>(undefined);
     const [returnData, setReturnData] = useState<StockPositionReturns | undefined>(undefined);
     const [loading, setLoading] = useState(true);
 

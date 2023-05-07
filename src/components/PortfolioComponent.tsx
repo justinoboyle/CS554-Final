@@ -1,16 +1,9 @@
 import { getPortfolioById, calculatePortfolioReturns } from '../helpers/portfolioHelper'
 import { useState, useEffect } from 'react';
-import { StockPosition } from './StockPosition';
-
+import { StockPositionComponent } from './StockPositionComponent';
+import { Portfolio, StockPosition } from "@prisma/client";
 type Props = {
     key: string
-}
-
-type PortfolioObject = {
-    id: string
-    title: string
-    userId: string
-    positions: string[]
 }
 
 type PortfolioReturns = {
@@ -19,9 +12,9 @@ type PortfolioReturns = {
 }
 
 // takes portfolio id as key from props
-export const Portfolio = (props: Props) => {
+export const PortfolioComponent = (props: Props) => {
     const portfolioId = props.key;
-    const [portfolioData, setPortfolioData] = useState<PortfolioObject | undefined>(undefined);
+    const [portfolioData, setPortfolioData] = useState<Portfolio | undefined>(undefined);
     const [returnData, setReturnData] = useState<PortfolioReturns | undefined>(undefined);
     const [loading, setLoading] = useState(true);
 
@@ -49,8 +42,8 @@ export const Portfolio = (props: Props) => {
     if(loading) return (<p>Loading Position Data...</p>);
     if(!portfolioData || !returnData) return (<p>Error: Failed to fetch Portfolio</p>)
 
-    const portfolioPositions = portfolioData.positions.map((positionId) => {
-        return (<StockPosition key={positionId}/>);
+    const portfolioPositions = portfolioData.positions.map((position : StockPosition) => {
+        return (<StockPositionComponent key={position.id}/>);
     });
 
     return (
