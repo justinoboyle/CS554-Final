@@ -1,11 +1,15 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { Portfolio } from "@prisma/client";
 
+import { SanitizedUser } from "../../../helpers/userHelper";
+
 import { constructHandler, InternalResponse } from "../../../helpers/errors";
 
 import type { UserSession } from "../../../helpers/userHelper";
 import { getPortfoliosByUser } from "../../../helpers/portfolioHelper";
 // import { createPortfolio } from "../../../helpers/portfolioHelper";
+
+import type { PortfolioWithPositions } from "../../../helpers/portfolioHelper";
 
 // TODO update
 export type Watchlist = {};
@@ -21,16 +25,17 @@ async function dummyNotifications(): Promise<Notification[]> {
 
 /* The home page/dashboard will have an overview of all of the user’s subscribed stocks and invested portfolios, as well as a notification feed (described below).
  */
-export type HomeData = {
-  portfolios: Portfolio[];
+export type TopLevelData = {
+  portfolios: PortfolioWithPositions[];
   watchlist: Watchlist;
   notifications: Notification[];
+  user: SanitizedUser;
 };
 
 const endpoint = async (
   req: NextApiRequest,
   session?: UserSession
-): Promise<InternalResponse<HomeData | undefined>> => {
+): Promise<InternalResponse<TopLevelData | undefined>> => {
   // require login
   if (!session?.isLoggedIn || !session.user) {
     return {
@@ -54,6 +59,7 @@ const endpoint = async (
       portfolios,
       watchlist,
       notifications,
+      user,
     },
     statusCode: 200,
     failed: false,

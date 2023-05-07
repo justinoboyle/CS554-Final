@@ -2,7 +2,7 @@ import Head from "next/head";
 import { Inter } from "next/font/google";
 import styles from "@/styles/Home.module.css";
 import { Navbar } from "../components/Navbar";
-import useHomePage from "../hooks/useHomePage";
+import useHomePage from "../hooks/useTopLevelUserData";
 
 import { useState } from "react";
 
