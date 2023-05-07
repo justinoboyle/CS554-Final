@@ -1,7 +1,6 @@
-// Red line here on Portfolio
+import { NotFoundError, BadRequestError } from "./errors";
 import { PrismaClient, Portfolio, StockPosition } from "@prisma/client";
 import { getPriceAtTime } from '../helpers/stockPositionHelper';
-import { NotFoundError, BadRequestError } from "./errors";
 
 export type PortfolioWithPositions = Portfolio & {
   positions: StockPosition[];
@@ -74,4 +73,47 @@ export const calculatePortfolioReturns = async (
     asAmount: totalReturns,
     asPercentage: totalReturns / initialInvestment
   };
+
+export const getPortfoliosByUser = async (
+  userId: string
+): Promise<PortfolioWithPositions[]> => {
+  // also join securities
+  const prisma = new PrismaClient();
+
+  const portfolios = await prisma.portfolio.findMany({
+    where: {
+      userId,
+    },
+    include: {
+      positions: true,
+    },
+  });
+
+  return portfolios;
+};
+
+export const deletePortfolio = async (
+  portfolioId: string,
+  userId: string
+): Promise<boolean> => {
+  const prisma = new PrismaClient();
+
+  const portfolio = await prisma.portfolio.findUnique({
+    where: {
+      id: portfolioId,
+    },
+  });
+
+  if (!portfolio) throw new NotFoundError("Portfolio not found");
+
+  // ensure user owns it
+  if (portfolio.userId !== userId) throw new BadRequestError("Invalid user ID");
+
+  await prisma.portfolio.delete({
+    where: {
+      id: portfolioId,
+    },
+  });
+
+  return true;
 };
