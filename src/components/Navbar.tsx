@@ -3,7 +3,7 @@ import styles from "./Navbar.module.css";
 
 import useUser from "../hooks/useUser";
 
-type Pages = "home" | "about" | "portfolios" | "watchlist";
+type Pages = "home" | "about" | "portfolios" | "watchlist" | "";
 
 export const Navbar = ({ activePage = "home" }: { activePage: Pages }) => {
   const { user, isLoggedIn, isLoading } = useUser();
