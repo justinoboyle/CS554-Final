@@ -7,7 +7,6 @@ import { constructHandler, InternalResponse } from "../../../helpers/errors";
 
 import type { UserSession } from "../../../helpers/userHelper";
 import { getPortfoliosByUser } from "../../../helpers/portfolioHelper";
-// import { createPortfolio } from "../../../helpers/portfolioHelper";
 
 import type { PortfolioWithPositions } from "../../../helpers/portfolioHelper";
 
