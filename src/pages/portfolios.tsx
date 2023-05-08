@@ -6,7 +6,7 @@ import { toast } from "react-toastify";
 import { Navbar } from "../components/Navbar";
 
 import styles from "@/styles/portfolios.module.css";
-import { Portfolio } from "@prisma/client";
+import { PortfolioComponent } from "../components/PortfolioComponent";
 import useTopLevelUserData from "../hooks/useTopLevelUserData";
 
 function Portfolios() {
@@ -50,12 +50,7 @@ function Portfolios() {
       result.push(
         <div className={styles.portfolio_wrapper} key={portfolio.id}>
           <div className={styles.portfolio_information}>
-            <h2>{portfolio.title}</h2>
-            <p>
-              {portfolio.positions.length > 0
-                ? portfolio.positions.map((a) => a.ticker)
-                : "No stocks in portfolio"}
-            </p>
+            <PortfolioComponent key={portfolio.id} portfolioObj={portfolio}/>
           </div>
           <div className={styles.button_wrapper}>
             <button className={`${styles.button} ${styles.add_button}`}>

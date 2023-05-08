@@ -31,7 +31,7 @@ model StockPosition {
   createdAt   DateTime   @default(now())
   ticker      String
   amount      Int
-  Portfolio   Portfolio? @relation(fields: [portfolioId], references: [id])
+  portfolio   Portfolio? @relation(fields: [portfolioId], references: [id])
   portfolioId String?    @db.ObjectId
 }
 

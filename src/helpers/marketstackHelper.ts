@@ -1,10 +1,9 @@
-const { MARKETSTACK_API_KEY } = process.env;
-
 import axios from "axios";
-
 import { PrismaClient, StockEODData } from "@prisma/client";
 
-type MarketstackResponse<T> = {
+export const { MARKETSTACK_API_KEY } = process.env;
+
+export type MarketstackResponse<T> = {
   pagination: {
     limit: number;
     offset: number;
@@ -14,7 +13,7 @@ type MarketstackResponse<T> = {
   data: T;
 };
 
-type MarketstackEod = {
+export type MarketstackEod = {
   open: number;
   high: number;
   low: number;

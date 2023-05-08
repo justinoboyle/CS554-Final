@@ -1,9 +1,15 @@
 import { NotFoundError, BadRequestError } from "./errors";
 import { PrismaClient, Portfolio, StockPosition } from "@prisma/client";
+import { getPriceAtTime } from '../helpers/stockPositionHelper';
 
 export type PortfolioWithPositions = Portfolio & {
   positions: StockPosition[];
 };
+
+type PortfolioReturns = {
+  asAmount: number,
+  asPercentage: number
+}
 
 export const createPortfolio = async (
   title: string,
@@ -44,6 +50,29 @@ export const getPortfolioById = async (
   if (!portfolio) throw new NotFoundError("Portfolio not found");
 
   return portfolio;
+};
+
+// takes portfolio with positions
+export const calculatePortfolioReturns = async (
+  portfolio: PortfolioWithPositions
+): Promise<PortfolioReturns> => {
+  const portfolioPositions = portfolio.positions;
+  let totalReturns = 0;
+  let initialInvestment = 0;
+
+  Promise.all(
+    portfolioPositions.map(async (stockPosition : StockPosition) => {
+      const purchasePrice = await getPriceAtTime(stockPosition.ticker, stockPosition.createdAt);
+      const currentPrice = await getPriceAtTime(stockPosition.ticker, new Date());
+      initialInvestment += stockPosition.amount * purchasePrice;  // cost basis
+      totalReturns += (currentPrice - purchasePrice) * stockPosition.amount;
+    })
+  );
+
+  return {
+    asAmount: totalReturns,
+    asPercentage: totalReturns / initialInvestment
+  };
 };
 
 export const getPortfoliosByUser = async (
