@@ -61,7 +61,7 @@ export const calculatePortfolioReturns = async (
   let initialInvestment = 0;
 
   Promise.all(
-    portfolioPositions.map(async (stockPosition : StockPosition) => {
+    portfolioPositions.map(async (stockPosition: StockPosition) => {
       const purchasePrice = await getPriceAtTime(stockPosition.ticker, stockPosition.createdAt);
       const currentPrice = await getPriceAtTime(stockPosition.ticker, new Date());
       initialInvestment += stockPosition.amount * purchasePrice;  // cost basis

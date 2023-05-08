@@ -1,9 +1,9 @@
 import { PortfolioWithPositions, calculatePortfolioReturns } from '../helpers/portfolioHelper'
 import { useState, useEffect } from 'react';
-import { StockPositionComponent } from './StockPositionComponent';
-import { StockPosition } from "@prisma/client";
+
 
 type Props = {
+    id: string,
     portfolioObj: PortfolioWithPositions
 }
 
@@ -22,9 +22,7 @@ export const PortfolioComponent = (props: Props) => {
         async function fetchData() {
             try {
                 setLoading(true);
-
                 const returns = await calculatePortfolioReturns(portfolioData);
-
                 setReturnData(returns)
                 setLoading(false);
 
@@ -34,27 +32,18 @@ export const PortfolioComponent = (props: Props) => {
             }
         };
         fetchData();
-    }, []);
+    }, [portfolioData]);
 
-    if(loading) return (<p>Loading Position Data...</p>);
-    if(!portfolioData || !returnData) return (<p>Error: Failed to fetch Portfolio</p>)
-
-    // construct individual position components
-    const portfolioPositions = portfolioData.positions.map((position : StockPosition) => {
-        return (<StockPositionComponent key={position.id} positionObj={position}/>);
-    });
+    if (loading) return (<p>Loading Portfolio Data...</p>);
+    if (!portfolioData || !returnData) return (<p>Error: Failed to fetch Portfolio</p>)
 
     return (
         <div id={portfolioData.id}>
-            <div id='portfolio-header'>
-                { portfolioData ? portfolioData.title : "Unknown Portfolio Title"}
-            </div>
+            <h2 id='portfolio-header'>
+                {portfolioData ? portfolioData.title : "Unknown Portfolio Title"}
+            </h2>
             <div>
                 Portfolio Returns: {returnData.asAmount} ({returnData.asAmount ? returnData.asPercentage : "0%"})
-            </div>
-            <div>
-                Current Positions: 
-                {portfolioPositions.length !== 0 ? portfolioPositions : " None"}
             </div>
         </div>
     )

@@ -20,7 +20,6 @@ export const StockPositionComponent = (props: Props) => {
     const positionObj = props.positionObj;
     const positionId = positionObj.id;
 
-    const [stockPositionData, setStockPositionData] = useState<StockPosition | undefined>(undefined);
     const [currentPrice, setCurrentPrice] = useState<number>(0);
     const [purchasePrice, setPurchasePrice] = useState<number>(0);
     const [returnData, setReturnData] = useState<StockPositionReturns | undefined>(undefined);
@@ -29,22 +28,13 @@ export const StockPositionComponent = (props: Props) => {
     useEffect(() => {
         async function fetchData() {
             try {
-                setLoading(true);  // shouldn't be needed but as a precaution
-
-                let data;  // load data only if needed
-                if(!positionObj){
-                    data = await getStockPositionById(positionId);
-                }
-                else{
-                    data = positionObj;
-                }
+                setLoading(true);
                 
-                const currentPrice = await getPriceAtTime(data.ticker, data.createdAt);
-                const purchasePrice = await getPriceAtTime(data.ticker, new Date());
+                const currentPrice = await getPriceAtTime(positionObj.ticker, positionObj.createdAt);
+                const purchasePrice = await getPriceAtTime(positionObj.ticker, new Date());
 
-                const returns = await calculateStockPositionReturns(data, purchasePrice, currentPrice);
+                const returns = await calculateStockPositionReturns(positionObj, purchasePrice, currentPrice);
 
-                setStockPositionData(data);
                 setCurrentPrice(currentPrice);
                 setPurchasePrice(purchasePrice);
                 setReturnData(returns);
@@ -59,10 +49,10 @@ export const StockPositionComponent = (props: Props) => {
     }, [positionId, positionObj]);
 
     if(loading) return (<p>Loading...</p>);
-    if(!stockPositionData || !returnData) return (<p>Error: Failed to fetch Stock Position</p>)
+    if(!positionObj || !returnData) return (<p>Error: Failed to fetch Stock Position</p>)
 
     return (
-        <div id={stockPositionData.id}>
+        <div id={positionObj.id}>
             <h3>stockPositionData.ticker</h3>
             <table>
                 <tr>
@@ -74,13 +64,13 @@ export const StockPositionComponent = (props: Props) => {
                     <th>Purchase Date</th>
                 </tr>
                 <tr>
-                    <th>{stockPositionData.amount}</th>
+                    <th>{positionObj.amount}</th>
                     <th>{currentPrice}</th>
                     <th>{purchasePrice}</th>
                     <th>{returnData.asAmount} ({returnData.asPercentage})</th>
-                    <th>{currentPrice * stockPositionData.amount}</th>
+                    <th>{currentPrice * positionObj.amount}</th>
                     {/* TODO: Format Date */}
-                    <th>{stockPositionData.createdAt.toString()}</th>
+                    <th>{positionObj.createdAt.toString()}</th>
                 </tr>
             </table>
         </div>

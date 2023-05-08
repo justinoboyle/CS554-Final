@@ -1,7 +1,7 @@
 import Head from "next/head";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
-import { toast } from "react-toastify";
+import Link from "next/link";
 
 import { Navbar } from "../components/Navbar";
 
@@ -48,22 +48,24 @@ function Portfolios() {
     let result = [];
     for (let portfolio of portfolios) {
       result.push(
-        <div className={styles.portfolio_wrapper} key={portfolio.id}>
-          <div className={styles.portfolio_information}>
-            <PortfolioComponent key={portfolio.id} portfolioObj={portfolio}/>
+        <Link href={"/portfolio/" + portfolio.id}>
+          <div className={styles.portfolio_wrapper} key={portfolio.id}>
+            <div className={styles.portfolio_information}>
+              <PortfolioComponent key={portfolio.id} id={portfolio.id} portfolioObj={portfolio}/>
+            </div>
+            <div className={styles.button_wrapper}>
+              <button className={`${styles.button} ${styles.add_button}`}>
+                Add stock
+              </button>
+              <button
+                className={`${styles.button} ${styles.delete_button}`}
+                onClick={() => handleDelete(portfolio.id)}
+              >
+                Delete portfolio
+              </button>
+            </div>
           </div>
-          <div className={styles.button_wrapper}>
-            <button className={`${styles.button} ${styles.add_button}`}>
-              Add stock
-            </button>
-            <button
-              className={`${styles.button} ${styles.delete_button}`}
-              onClick={() => handleDelete(portfolio.id)}
-            >
-              Delete portfolio
-            </button>
-          </div>
-        </div>
+        </Link>
       );
     }
     return result;
