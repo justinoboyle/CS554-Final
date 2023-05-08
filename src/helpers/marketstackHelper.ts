@@ -176,7 +176,4 @@ export const doesSecurityExist = async (symbol: string): Promise<boolean> => {
   } catch (error) {
     return false;
   }
-
-  // if that fails, return false
-  return false;
 };

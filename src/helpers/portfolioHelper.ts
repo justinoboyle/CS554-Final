@@ -9,8 +9,6 @@ export const createPortfolio = async (
   title: string,
   userId: string
 ): Promise<PortfolioWithPositions> => {
-  if (!userId) throw new NotFoundError("User not found");
-
   const prisma = new PrismaClient();
 
   const portfolio = await prisma.portfolio.create({
