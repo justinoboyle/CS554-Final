@@ -12,8 +12,6 @@ import useTopLevelUserData from "../hooks/useTopLevelUserData";
 function Portfolios() {
   const { data, error, mutate, helpers } = useTopLevelUserData();
   const [title, setTitle] = useState<string>("");
-  const [errorMessage, setErrorMessage] = useState<string>("");
-  const [successMessage, setSuccessMessage] = useState<string>("");
   const [disabled, setDisabled] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -21,13 +19,7 @@ function Portfolios() {
 
   async function handleSubmit(e: any) {
     e.preventDefault();
-    setErrorMessage("");
-    setSuccessMessage("");
     setIsLoading(true);
-    if (title.trim().length === 0) {
-      setErrorMessage("Please enter a title");
-      return;
-    }
     setDisabled(true);
     try {
       await helpers.createPortfolio(title);
@@ -95,6 +87,7 @@ function Portfolios() {
           <h1 className={styles.title}>Portfolios</h1>
           <form className={styles.form} onSubmit={handleSubmit}>
             <label className={styles.form_group}>Create a portfolio</label>
+            <br/>
             <input
               className={styles.form_group}
               name="symbol"
@@ -110,16 +103,6 @@ function Portfolios() {
             >
               Submit
             </button>
-            {errorMessage && (
-              <p className={`${styles.form_message} ${styles.error}`}>
-                {errorMessage}
-              </p>
-            )}
-            {successMessage && (
-              <p className={`${styles.form_message} ${styles.success}`}>
-                {successMessage}
-              </p>
-            )}
           </form>
           <div>{buildPortfolios()}</div>
         </div>
