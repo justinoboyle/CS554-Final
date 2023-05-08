@@ -16,13 +16,15 @@ enum Role {
 }
 
 model User {
-  id             String   @id @default(auto()) @map("_id") @db.ObjectId
-  createdAt      DateTime @default(now())
-  email          String   @unique
+  id             String    @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt      DateTime  @default(now())
+  email          String    @unique
   name           String?
-  role           Role     @default(USER)
+  role           Role      @default(USER)
   passwordBcrypt String?
   portfolioIds   String[]
+  triggers       Trigger[] 
+  alerts         Alert[]
 }
 
 model StockPosition {
@@ -36,4 +38,50 @@ model Portfolio {
   title     String
   userId    String
   positions String[] @default([])
+}
+
+model Trigger {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt DateTime @default(now())
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+  symbol    String
+  price     Float
+  type      String
+  fired     Boolean  @default(false) // we can use this to prevent redundant alerts. reset at market close/open?
+  alerts    Alert[]
+}
+
+enum TriggerType {
+  ABOVE
+  BELOW
+}
+
+model Alert {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt DateTime @default(now())
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+  triggerId String   @db.ObjectId
+  trigger   Trigger  @relation(fields: [triggerId], references: [id])
+  price     Float
+}
+
+model StockEODData {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  open         Float
+  low          Float
+  high         Float
+  close        Float
+  volume       Float
+  adj_high     Float
+  adj_low      Float
+  adj_close    Float
+  adj_open     Float
+  adj_volume   Float
+  split_factor Float
+  dividend     Float
+  symbol       String
+  exchange     String
+  date         DateTime
 }
