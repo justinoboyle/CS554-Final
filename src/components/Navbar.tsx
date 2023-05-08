@@ -3,7 +3,7 @@ import styles from "./Navbar.module.css";
 
 import useUser from "../hooks/useUser";
 
-type Pages = "home" | "about" | "portfolios";
+type Pages = "home" | "about" | "portfolios" | "alerts";
 
 export const Navbar = ({ activePage = "home" }: { activePage: Pages }) => {
   const { user, isLoggedIn, isLoading } = useUser();
@@ -34,6 +34,14 @@ export const Navbar = ({ activePage = "home" }: { activePage: Pages }) => {
               href="/portfolios"
             >
               Portfolios
+            </Link>
+          </li>
+          <li>
+            <Link
+              className={activePage === "alerts" ? styles.active : ""}
+              href="/alerts"
+            >
+              Alerts
             </Link>
           </li>
         </ul>
