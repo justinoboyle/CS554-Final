@@ -73,6 +73,7 @@ export const calculatePortfolioReturns = async (
     asAmount: totalReturns,
     asPercentage: totalReturns / initialInvestment
   };
+};
 
 export const getPortfoliosByUser = async (
   userId: string
