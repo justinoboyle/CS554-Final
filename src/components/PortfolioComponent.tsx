@@ -1,10 +1,10 @@
-import { PortfolioWithPositions, getPortfolioById, calculatePortfolioReturns } from '../helpers/portfolioHelper'
+import { PortfolioWithPositions, calculatePortfolioReturns } from '../helpers/portfolioHelper'
 import { useState, useEffect } from 'react';
 import { StockPositionComponent } from './StockPositionComponent';
 import { StockPosition } from "@prisma/client";
 
 type Props = {
-    key: string
+    portfolioObj: PortfolioWithPositions
 }
 
 type PortfolioReturns = {
@@ -14,8 +14,7 @@ type PortfolioReturns = {
 
 // takes portfolio id as key from props
 export const PortfolioComponent = (props: Props) => {
-    const portfolioId = props.key;
-    const [portfolioData, setPortfolioData] = useState<PortfolioWithPositions | undefined>(undefined);
+    const portfolioData = props.portfolioObj;
     const [returnData, setReturnData] = useState<PortfolioReturns | undefined>(undefined);
     const [loading, setLoading] = useState(true);
 
@@ -24,11 +23,8 @@ export const PortfolioComponent = (props: Props) => {
             try {
                 setLoading(true);
 
-                const data = await getPortfolioById(portfolioId);
+                const returns = await calculatePortfolioReturns(portfolioData);
 
-                const returns = await calculatePortfolioReturns(data);
-
-                setPortfolioData(data);
                 setReturnData(returns)
                 setLoading(false);
 
@@ -37,8 +33,8 @@ export const PortfolioComponent = (props: Props) => {
                 setLoading(false);
             }
         };
-        fetchData
-    }, [portfolioId]);
+        fetchData();
+    }, []);
 
     if(loading) return (<p>Loading Position Data...</p>);
     if(!portfolioData || !returnData) return (<p>Error: Failed to fetch Portfolio</p>)
@@ -54,7 +50,11 @@ export const PortfolioComponent = (props: Props) => {
                 { portfolioData ? portfolioData.title : "Unknown Portfolio Title"}
             </div>
             <div>
-                {portfolioPositions}
+                Portfolio Returns: {returnData.asAmount} ({returnData.asAmount ? returnData.asPercentage : "0%"})
+            </div>
+            <div>
+                Current Positions: 
+                {portfolioPositions.length !== 0 ? portfolioPositions : " None"}
             </div>
         </div>
     )

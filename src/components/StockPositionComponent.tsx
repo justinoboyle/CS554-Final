@@ -7,7 +7,6 @@ import { useState, useEffect } from 'react';
 import { StockPosition } from "@prisma/client";
 
 type Props = {
-    key: string,
     positionObj: StockPosition
 }
 
@@ -18,8 +17,9 @@ type StockPositionReturns = {
 
 // takes position id as key from props
 export const StockPositionComponent = (props: Props) => {
-    const positionId = props.key;
     const positionObj = props.positionObj;
+    const positionId = positionObj.id;
+
     const [stockPositionData, setStockPositionData] = useState<StockPosition | undefined>(undefined);
     const [currentPrice, setCurrentPrice] = useState<number>(0);
     const [purchasePrice, setPurchasePrice] = useState<number>(0);
@@ -55,7 +55,7 @@ export const StockPositionComponent = (props: Props) => {
                 setLoading(false);
             }
         };
-        fetchData
+        fetchData();
     }, [positionId, positionObj]);
 
     if(loading) return (<p>Loading...</p>);
