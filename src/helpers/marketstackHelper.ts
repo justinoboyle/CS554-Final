@@ -2,6 +2,12 @@ import axios from "axios";
 import { PrismaClient, StockEODData, KnownHolidays } from "@prisma/client";
 import prisma from "./dbHelper";
 
+const redis = require('redis');
+const client = redis.createClient({
+  url: process.env.REDIS_URL
+});
+client.connect().then(() => {});
+
 import moment from "moment-timezone";
 
 export const { MARKETSTACK_API_KEY } = process.env;
@@ -28,24 +34,27 @@ const waitIfRequired = async () => {
     await new Promise((resolve) => setTimeout(resolve, 1000));
   }
 };
-// only allow 10,000 entries at a time
-// format: YYYY-MM-DD-security
-type key = `${string}-${string}-${string}-${string}`;
-const localPriceCache = new Map<string, number>();
+// // only allow 10,000 entries at a time
+// // format: YYYY-MM-DD-security
+// type key = `${string}-${string}-${string}-${string}`;
+// const localPriceCache = new Map<string, number>();
+let keyConveyor: string[] = [];
 
-function checkLocalCache(symbol: string, date: string) {
-  const key = `${symbol}-${date}`;
-  return localPriceCache.get(key);
+async function checkRedis(symbol: string, date: string) {
+  const key = `${symbol}-${date}`
+  return await Number(client.get(key));
 }
 
-function setLocalCache(symbol: string, date: string, price: number) {
+async function setRedis(symbol: string, date: string, price: number) {
   const key = `${symbol}-${date}`;
   // check if already there
-  if (localPriceCache.has(key)) return;
-  localPriceCache.set(key, price);
+  if (await client.exists(key)) return;
+  keyConveyor.push(key)
+  await client.set(key, price.toString());
   // check length, remove oldest
-  if (localPriceCache.size > 10000) {
-    localPriceCache.delete(localPriceCache.keys().next().value);
+  if (keyConveyor.length > 10000) {
+    const oldestKey:string = keyConveyor.splice(0, 1)[0];
+    await client.del(oldestKey);
   }
 }
 
@@ -304,7 +313,7 @@ export const persistBulkEODDataByDay = async (
 
   // add all the close prices to the local cache
   unknownData.forEach((eod) => {
-    setLocalCache(eod.symbol, moment(eod.date).format("YYYY-MM-DD"), eod.close);
+    setRedis(eod.symbol, moment(eod.date).format("YYYY-MM-DD"), eod.close);
   });
 
   return;
@@ -368,7 +377,7 @@ export const getAllKnownPricesBetweenDateRange = async (
 
   // put all close prices in memory
   eodData.forEach((eod) => {
-    setLocalCache(eod.symbol, moment(eod.date).format("YYYY-MM-DD"), eod.close);
+    setRedis(eod.symbol, moment(eod.date).format("YYYY-MM-DD"), eod.close);
   });
 
   return eodData;
@@ -379,7 +388,7 @@ export const getStockPriceOnDate = async (
   date: string,
   iterations?: number
 ): Promise<number> => {
-  const lcl = checkLocalCache(symbol, date);
+  const lcl = await checkRedis(symbol, date);
   if (lcl) return lcl;
 
   // if it's a weekend go back one day
@@ -391,7 +400,7 @@ export const getStockPriceOnDate = async (
       moment(date).subtract(1, "days").format("YYYY-MM-DD"),
       iterations ? iterations + 1 : 0
     );
-    setLocalCache(symbol, date, res);
+    setRedis(symbol, date, res);
     return res;
   }
 
@@ -408,7 +417,7 @@ export const getStockPriceOnDate = async (
       moment(date).subtract(1, "days").format("YYYY-MM-DD"),
       iterations ? iterations + 1 : 0
     );
-    setLocalCache(symbol, date, res);
+    setRedis(symbol, date, res);
     return res;
   }
 
@@ -431,7 +440,7 @@ export const getStockPriceOnDate = async (
         moment(date).subtract(1, "days").format("YYYY-MM-DD"),
         iterations ? iterations + 1 : 0
       );
-      setLocalCache(symbol, date, res);
+      setRedis(symbol, date, res);
       return res;
     }
     if (eodData) return eodData.close;
@@ -446,7 +455,7 @@ export const getStockPriceOnDate = async (
       moment(date).subtract(1, "days").format("YYYY-MM-DD"),
       iterations ? iterations + 1 : 0
     );
-    setLocalCache(symbol, date, res);
+    setRedis(symbol, date, res);
     return res;
   }
   // persistEODDataForPastNYears
