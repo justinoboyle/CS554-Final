@@ -5,11 +5,13 @@ import { Navbar } from "@/components/Navbar";
 import { Loading } from "@/components/Loading";
 import { Error } from "@/components/Error";
 
+import { toast } from "react-toastify";
+
 import styles from "@/styles/stock.module.css";
 import { useStock } from "@/hooks/useStock";
 import useTopLevelUserData from "@/hooks/useTopLevelUserData";
 
-import { convertVolumeToShorthand, formatToDollar, calculateCostOfShares, handlePurchaseShares } from "@/helpers/stockHelper";
+import { convertVolumeToShorthand, formatToDollar, calculateCostOfShares, checkValidAmount, createStockPosition } from "@/helpers/stockHelper";
 
 function Stock() {
   const { data: topLevelData, error: topLevelError, mutate, helpers } = useTopLevelUserData();
@@ -22,30 +24,33 @@ function Stock() {
   const stock = stockData?.data;
   const portfolios = topLevelData?.portfolios || [];
 
-  console.log(topLevelData);
-
   function handleWatchOnClick(e: any) {
     e.preventDefault();
   }
 
-  function handleFormSubmit(e: any) {
+  async function handleFormSubmit(e: any) {
     e.preventDefault();
     setDisabled(true);
     setIsLoading(true);
-    let amount = e.target.amount.value;
-    handlePurchaseShares(amount, stock.volume);
+    let amount = parseFloat(e.target.amount.value);
+    let portfolioId = e.target.portfolio.value;
+    try {
+      checkValidAmount(amount, stock.volume);
+      createStockPosition(stock.symbol, amount, portfolioId).then((response) => console.log(response));
+    } catch(e) {
+      console.log(e);
+    }
     setIsLoading(false);
     setDisabled(false);
   }
 
   // Set amount to input value and prevent non-numeric characters from being entered
   function handleAmountOnChange(e: any) {
-    let input = e.target.value;
-    if (isNaN(input.charAt(input.length-1))) {
-      e.target.value = input.slice(0, -1);
-      return;
+    if (isNaN(e.nativeEvent.data)) {
+      e.target.value = amount;
+    } else {
+      setAmount(e.target.value);
     }
-    setAmount(input);
   }
 
   if (stockError) return <Error message={stockError}/>
@@ -115,9 +120,9 @@ function Stock() {
                 {portfolios.length
                 ?
                 <select name="portfolio">
-                  <option value="" selected><span className={styles.italic}>Select a portfolio</span></option>
+                  <option className={styles.first_option} value="">Select a portfolio</option>
                   {portfolios.map((portfolio) => {
-                    return <option value={portfolio.id}>{portfolio.title}</option>
+                    return <option value={portfolio.id} key={portfolio.id}>{portfolio.title}</option>
                   })}
                 </select>
                 :
@@ -134,7 +139,7 @@ function Stock() {
               <hr className={styles.horizontal_line} />
               <div className={styles.form_group}>
                 <label className={`${styles.form_label} ${styles.bold}`}>Cost (on close)</label>
-                <span>{calculateCostOfShares(amount, stock.close)}</span>
+                <span>{calculateCostOfShares(parseFloat(amount), stock.close)}</span>
               </div>
               <div className={styles.button_wrapper}>
                 {portfolios.length ? <button type='submit' className={styles.buy_button}>Buy {stock.symbol}</button> : <button type='button' className={styles.blank_button}>Create a portfolio first!</button>}
