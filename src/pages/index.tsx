@@ -11,14 +11,16 @@ import { useState } from "react";
 const inter = Inter({ subsets: ["latin"] });
 
 export default function Home() {
-  const { data, isLoading } = useHomePage();
+  const { data, isLoading} = useHomePage();
 
   if (isLoading) {
     return <div>Loading...</div>;
   }
 
-  if (!data) {
-    return <div>Something went wrong</div>;
+  if (!data?.user) {
+    // redirect to login page
+    window.location.href = "/auth/login";
+    return <div>Redirecting...</div>;
   }
 
   const { notifications, watchlist, portfolios } = data;
