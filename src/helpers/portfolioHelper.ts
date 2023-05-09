@@ -224,7 +224,7 @@ export const getPortfoliosByUser = async (
   // also join securities
   const prisma = new PrismaClient();
 
-  const portfolios : PortfolioJoined[] = await prisma.portfolio.findMany({
+  const portfolios = await prisma.portfolio.findMany({
     where: {
       userId,
     },
