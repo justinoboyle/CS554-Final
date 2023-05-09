@@ -1,5 +1,5 @@
 import { useRouter } from "next/router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { Navbar } from "@/components/Navbar";
 import { Loading } from "@/components/Loading";
@@ -8,33 +8,33 @@ import { Error } from "@/components/Error";
 import { toast } from "react-toastify";
 
 import styles from "@/styles/stock.module.css";
-import { useStock } from "@/hooks/useStock";
 import useTopLevelUserData from "@/hooks/useTopLevelUserData";
+import { useSecurity } from "@/hooks/fetchers/useSecurity";
+import { useStock } from "@/hooks/fetchers/useStock";
 
-import {
-  convertVolumeToShorthand,
-  formatToDollar,
-  calculateCostOfShares,
-  checkValidAmount,
-  createStockPosition,
-} from "@/helpers/stockHelper";
+import { convertVolumeToShorthand, formatToDollar, calculateCostOfShares, checkValidAmount, createStockPosition } from "@/helpers/stockHelper";
+import { StockEODData } from "@prisma/client";
 
 function Stock() {
-  const {
-    data: topLevelData,
-    error: topLevelError,
-    mutate,
-    helpers,
-  } = useTopLevelUserData();
-  const router = useRouter();
-  const { data: stockData, error: stockError } = useStock(
-    "" + router?.query?.ticker
-  );
   const [amount, setAmount] = useState<string>("");
   const [disabled, setDisabled] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  
+  const router = useRouter();
+  const [ticker, setTicker] = useState<string | undefined>(undefined);
+  const { data: topLevelData, error: topLevelError, mutate, helpers } = useTopLevelUserData();
+  const { doesSecurityExist, error: securityError, loading: securityLoading, fn: fetchSecurity } = useSecurity();
+  const { data: stockData, error: stockError, loading: stockLoading, fn: fetchStock } = useStock();
 
-  const portfolios = topLevelData?.portfolios || [];
+  const portfolios = topLevelData?.portfolios || [];  
+
+  useEffect(() => {
+    if (router.isReady) {
+      setTicker("" + router.query.ticker);
+      fetchSecurity("" + router.query.ticker);
+      fetchStock("" + router.query.ticker);
+    }
+  }, [router.isReady]);
 
   function handleWatchOnClick(e: any) {
     e.preventDefault();
@@ -47,11 +47,9 @@ function Stock() {
     let amount = parseFloat(e.target.amount.value);
     let portfolioId = e.target.portfolio.value;
     try {
-      checkValidAmount(amount, stock.volume);
-      createStockPosition(stock.symbol, amount, portfolioId).then((response) =>
-        console.log(response)
-      );
-    } catch (e) {
+      checkValidAmount(amount, stock?.volume as number);
+      createStockPosition(stock?.symbol as string, amount, portfolioId).then((response) => console.log(response));
+    } catch(e) {
       console.log(e);
     }
     toast.success("Successfully added to portfolio");
@@ -68,12 +66,14 @@ function Stock() {
     }
   }
 
-  if (!stockData?.doesSecurityExist === false)
-    return <Error message={"Stock ticker does not exist!"} />;
-  if (!stockData) return <Loading />;
+  if (securityLoading || stockLoading) return <Loading />;
+  console.log(doesSecurityExist);
+  if (doesSecurityExist === false) return <Error message="Security does not exist" />
+  if (securityError) return <Error message={securityError} />
+  if (stockError) return <Error message={stockError} />
 
-  console.log(stockData, stockError);
-  const stock = stockData?.data;
+  const stock = stockData?.data as StockEODData;
+
   /* 
   "open": 129.8,
   "high": 133.04,
@@ -97,32 +97,21 @@ function Stock() {
       <Navbar activePage="" />
       <div className={styles.main_wrapper}>
         <div className={styles.stock_wrapper}>
-          <h2>{stock.symbol}</h2>
-          <p>
-            Last updated:{" "}
-            <span className={styles.italic}>
-              {new Date(stock.date).toString()}
-            </span>
-          </p>
+          <h2>{stock?.symbol}</h2>
+          <p>Last updated: <span className={styles.italic}>{new Date(stock?.date as Date).toString()}</span></p>
           <table className={styles.table}>
             <tbody>
               <tr className={styles.table_row}>
                 <th className={styles.table_header}>High:</th>
-                <td className={styles.table_value}>
-                  {formatToDollar(stock.high)}
-                </td>
+                <td className={styles.table_value}>{formatToDollar(stock?.high as number)}</td>
               </tr>
               <tr className={styles.table_row}>
                 <th className={styles.table_header}>Low:</th>
-                <td className={styles.table_value}>
-                  {formatToDollar(stock.low)}
-                </td>
+                <td className={styles.table_value}>{formatToDollar(stock?.low as number)}</td>
               </tr>
               <tr className={styles.table_row}>
                 <th className={styles.table_header}>Volume:</th>
-                <td className={styles.table_value}>
-                  {convertVolumeToShorthand(stock.volume)}
-                </td>
+                <td className={styles.table_value}>{convertVolumeToShorthand(stock?.volume as number)}</td>
               </tr>
             </tbody>
           </table>
@@ -136,21 +125,22 @@ function Stock() {
               {"\u2606"} Watch
             </button>
           </div>
-          <form className={styles.form} onSubmit={handleFormSubmit}>
-            <h2 className={styles.form_title}>Buy {stock.symbol}</h2>
-            <div className={styles.form_group}>
-              <label className={styles.form_label}>Shares</label>
-              <input
-                className={styles.form_input}
-                name="amount"
-                placeholder="0"
-                onChange={handleAmountOnChange}
-                disabled={disabled || isLoading}
-              />
-            </div>
-            <div className={styles.form_group}>
-              <label className={styles.form_label}>Portfolio</label>
-              {portfolios.length ? (
+            <form className={styles.form} onSubmit={handleFormSubmit}>
+            <h2 className={styles.form_title}>Buy {stock?.symbol as string}</h2>
+              <div className={styles.form_group}>
+                <label className={styles.form_label}>Shares</label>
+                <input
+                  className={styles.form_input}
+                  name="amount"
+                  placeholder="0"
+                  onChange={handleAmountOnChange}
+                  disabled={disabled || isLoading}
+                />
+              </div>
+              <div className={styles.form_group}>
+                <label className={styles.form_label}>Portfolio</label>
+                {portfolios.length
+                ?
                 <select name="portfolio">
                   <option className={styles.first_option} value="">
                     Select a portfolio
@@ -163,39 +153,26 @@ function Stock() {
                     );
                   })}
                 </select>
-              ) : (
-                <span className={styles.italic}>No portfolios yet!</span>
-              )}
-            </div>
-            <div className={styles.form_group}>
-              <label className={styles.form_label}>Open price</label>
-              <span>{formatToDollar(stock.open)}</span>
-            </div>
-            <div className={styles.form_group}>
-              <label className={styles.form_label}>Close price</label>
-              <span>{formatToDollar(stock.close)}</span>
-            </div>
-            <hr className={styles.horizontal_line} />
-            <div className={styles.form_group}>
-              <label className={`${styles.form_label} ${styles.bold}`}>
-                Cost (on close)
-              </label>
-              <span>
-                {calculateCostOfShares(parseFloat(amount), stock.close)}
-              </span>
-            </div>
-            <div className={styles.button_wrapper}>
-              {portfolios.length ? (
-                <button type="submit" className={styles.buy_button}>
-                  Buy {stock.symbol}
-                </button>
-              ) : (
-                <button type="button" className={styles.blank_button}>
-                  Create a portfolio first!
-                </button>
-              )}
-            </div>
-          </form>
+                :
+                <span className={styles.italic}>No portfolios yet!</span>}
+              </div>
+              <div className={styles.form_group}>
+                <label className={styles.form_label}>Open price</label>
+                <span>{formatToDollar(stock?.open as number)}</span>
+              </div>
+              <div className={styles.form_group}>
+                <label className={styles.form_label}>Close price</label>
+                <span>{formatToDollar(stock?.close as number)}</span>
+              </div>
+              <hr className={styles.horizontal_line} />
+              <div className={styles.form_group}>
+                <label className={`${styles.form_label} ${styles.bold}`}>Cost (on close)</label>
+                <span>{calculateCostOfShares(parseFloat(amount), stock?.close as number)}</span>
+              </div>
+              <div className={styles.button_wrapper}>
+                {portfolios.length ? <button type='submit' className={styles.buy_button}>Buy {stock?.symbol as string}</button> : <button type='button' className={styles.blank_button}>Create a portfolio first!</button>}
+              </div>
+            </form>
         </div>
       </div>
     </div>

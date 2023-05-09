@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Modal from "react-modal";
 import styles from "./AddStockModal.module.css";
-import { doesSecurityExist } from "../hooks/fetchers/stockHelper";
+import { doesSecurityExist } from "../hooks/fetchers/useSecurity";
 
 type Props = {
   onAdd: (symbol: string, shareCount: number, datePurchased: Date) => void;
