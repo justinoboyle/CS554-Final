@@ -65,3 +65,9 @@ model StockEODData {
   exchange     String
   date         DateTime
 }
+
+model Watchlist {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String   @db.ObjectId
+  watchlist    String[]
+}

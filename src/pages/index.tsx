@@ -27,7 +27,7 @@ export default function Home() {
     return (
       <div key={portfolio.id} className={styles.portfolio}>
         <Link
-          href={`/portfolio/${portfolio.id}`}
+          href={`/portfolios/${portfolio.id}`}
         >
           <div>
             <h3>{portfolio.title}</h3>

@@ -13,7 +13,6 @@ import { doesSecurityExist } from "@/hooks/fetchers/useSecurity";
 import { fetchStock } from "@/hooks/fetchers/useStock";
 
 import { convertVolumeToShorthand, formatToDollar, calculateCostOfShares, checkValidAmount } from "@/helpers/stockHelper";
-import { StockEODData } from "@prisma/client";
 
 function Stock() {
   const [amount, setAmount] = useState<string>("");
@@ -37,7 +36,8 @@ function Stock() {
           if (!securityExists) {
             setError("Security doesn't exist");
             return;
-          } 
+          }
+          console.log("Security", securityExists);
           let data = await fetchStock("" + router.query.ticker);
           setStockData(data);
         }
@@ -80,7 +80,6 @@ function Stock() {
   }
 
   console.log(stockData);
-  console.log(topLevelData);
   if (!stockData || !topLevelData) return <Loading />;
   if (error) return <Error message={error.message} />
 
