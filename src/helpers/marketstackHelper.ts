@@ -272,26 +272,26 @@ export const persistBulkEODDataByDay = async (
 
   console.log("Persisting", unknownData.length, "entries");
 
+  /* StockEODData without id */
+  type Data = Omit<StockEODData, "id">;
+  const data: Data[] = unknownData.map((eod) => ({
+    symbol: eod.symbol,
+    date: new Date(eod.date),
+    open: eod.open,
+    high: eod.high,
+    low: eod?.low || 0,
+    close: eod.close,
+    volume: eod?.volume || 0,
+    adj_high: eod?.adj_high || 0,
+    adj_low: eod?.adj_low || 0,
+    adj_close: eod?.adj_close || 0,
+    adj_open: eod?.adj_open || 0,
+    adj_volume: eod?.adj_volume || 0,
+    exchange: eod?.exchange || "UNKNOWN",
+    dividend: 0,
+    split_factor: 0,
+  }));
   try {
-    /* StockEODData without id */
-    type Data = Omit<StockEODData, "id">;
-    const data: Data[] = unknownData.map((eod) => ({
-      symbol: eod.symbol,
-      date: new Date(eod.date),
-      open: eod.open,
-      high: eod.high,
-      low: eod?.low || 0,
-      close: eod.close,
-      volume: eod?.volume || 0,
-      adj_high: eod?.adj_high || 0,
-      adj_low: eod?.adj_low || 0,
-      adj_close: eod?.adj_close || 0,
-      adj_open: eod?.adj_open || 0,
-      adj_volume: eod?.adj_volume || 0,
-      exchange: eod?.exchange || "UNKNOWN",
-      dividend: 0,
-      split_factor: 0,
-    }));
     if (data && data.length > 0) {
       const persistedEodData = await prisma.stockEODData.createMany({
         data,
@@ -299,6 +299,7 @@ export const persistBulkEODDataByDay = async (
     }
   } catch (e) {
     console.error(e);
+    console.log("...when trying to insert " + data.length + " entries")
   }
 
   // add all the close prices to the local cache
