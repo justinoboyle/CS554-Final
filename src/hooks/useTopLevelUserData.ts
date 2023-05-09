@@ -46,10 +46,8 @@ export default function useHomePage(): HomeHook {
       } as TopLevelData,
     } as ExternalResponse<TopLevelData>;
 
-    console.log(portfolioId, " + ", homeData?.data?.user?.id)
-
     const response = await fetch("/api/portfolio/delete", {
-      method: "DELETE",
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
       },

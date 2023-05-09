@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
-// import useTopLevelUserData from "@/hooks/useTopLevelUserData";
-// import { useStock } from "@/hooks/useStock";
+import { useStock } from "@/hooks/fetchers/useStock";
 import styles from "./StockPositionComponent.module.css";
 import { StockPosition } from "@prisma/client";
 
@@ -13,8 +12,7 @@ type Props = {
 // takes position id as key from props
 export const StockPositionComponent = (props: Props) => {
     const positionObj = props.positionObj;
-    const router = useRouter();
-    //const { data: stockData, error: stockError } = useStock("" + router?.query?.ticker);
+    const { data: stockData, error: stockError } = useStock("" + positionObj.ticker);
 
     const createdDate = positionObj.createdAt.toString().substring(0,10);
 
