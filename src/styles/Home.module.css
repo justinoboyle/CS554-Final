@@ -4,20 +4,27 @@
 }
 
 .main {
-  width: 70%;
+  flex: 1;
   padding: 12px;
 }
 
 .sidebar {
-  width: 30%;
+  width: 300px;
   padding: 12px;
 }
 
 .portfolioCards {
   display: flex;
   flex-flow: row wrap;
+  justify-content: space-between;
   gap: 8px;
   margin-top: 5px;
+}
+
+/* Help from https://stackoverflow.com/questions/18744164/flex-box-align-last-row-to-grid */
+.portfolioCards::after {
+  content: "";
+  flex: auto;
 }
 
 .portfolio {
