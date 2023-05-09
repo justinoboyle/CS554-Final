@@ -41,8 +41,12 @@ const waitIfRequired = async () => {
 let keyConveyor: string[] = [];
 
 async function checkRedis(symbol: string, date: string) {
-  const key = `${symbol}-${date}`
-  return await Number(client.get(key));
+  const key = `${symbol}-${date}`;
+  const redisOut = await client.get(key);
+  if (redisOut !== null){
+    return Number(redisOut)
+  }
+  return redisOut;
 }
 
 async function setRedis(symbol: string, date: string, price: number) {
