@@ -40,24 +40,21 @@ function Portfolios() {
     let result = [];
     for (let portfolio of portfolios) {
       result.push(
-        <Link href={"/portfolios/" + portfolio.id}>
-          <div className={styles.portfolio_wrapper} key={portfolio.id}>
-            <div className={styles.portfolio_information}>
-              <PortfolioComponent key={portfolio.id} id={portfolio.id} portfolioObj={portfolio}/>
-            </div>
-            <div className={styles.button_wrapper}>
-              <button className={`${styles.button} ${styles.add_button}`}>
-                Add stock
-              </button>
-              <button
-                className={`${styles.button} ${styles.delete_button}`}
-                onClick={() => handleDelete(portfolio.id)}
-              >
-                Delete portfolio
-              </button>
-            </div>
+        <div className={styles.portfolio_wrapper} key={portfolio.id}>
+          <div className={styles.portfolio_information}>
+            <Link href={"/portfolio/" + portfolio.id}>
+              <PortfolioComponent key={portfolio.id} id={portfolio.id} portfolioObj={portfolio} />
+            </Link>
           </div>
-        </Link>
+          <div className={styles.button_wrapper}>
+            <button
+              className={`${styles.button} ${styles.delete_button}`}
+              onClick={() => handleDelete(portfolio.id)}
+            >
+              Delete portfolio
+            </button>
+          </div>
+        </div>
       );
     }
     return result;
