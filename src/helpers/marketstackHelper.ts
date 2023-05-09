@@ -79,8 +79,6 @@ export const getEODUncachedFromMarketstack = async (
   symbol: string,
   date: string
 ): Promise<MarketstackEod> => {
-  console.log("Marketstack getEODUncachedFromMarketstack");
-
   // check if we're running in a browser
   if (typeof window !== "undefined") {
     throw new Error("Cannot call this function from the browser");
@@ -118,6 +116,10 @@ export const getEODUncachedByDateRange = async (
   dateFrom: string,
   dateTo: string
 ): Promise<MarketstackEod[]> => {
+  // if invalid symbol throw error
+  if (!symbol || (symbol?.trim()?.length || 0) < 1) {
+    throw new Error("Invalid symbol");
+  }
   // check if we're running in a browser
   if (typeof window !== "undefined") {
     throw new Error("Cannot call this function from the browser");
@@ -133,7 +135,6 @@ export const getEODUncachedByDateRange = async (
     const dateTo1 = dateFromMoment.add(2, "years").format("YYYY-MM-DD");
     const dateFrom2 = dateFromMoment.add(1, "days").format("YYYY-MM-DD");
     const dateTo2 = dateToMoment.format("YYYY-MM-DD");
-    console.log("SPLIT" + symbol);
     try {
       const eodData1 = await getEODUncachedByDateRange(
         symbol,
@@ -291,9 +292,11 @@ export const persistBulkEODDataByDay = async (
       dividend: 0,
       split_factor: 0,
     }));
-    const persistedEodData = await prisma.stockEODData.createMany({
-      data,
-    });
+    if (data && data.length > 0) {
+      const persistedEodData = await prisma.stockEODData.createMany({
+        data,
+      });
+    }
   } catch (e) {
     console.error(e);
   }
