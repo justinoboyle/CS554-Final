@@ -1,8 +1,10 @@
 import Head from "next/head";
+import Link from "next/link";
 import { Inter } from "next/font/google";
 import styles from "@/styles/Home.module.css";
 import { Navbar } from "../components/Navbar";
 import useHomePage from "../hooks/useTopLevelUserData";
+import { PortfolioJoined } from "@/helpers/portfolioHelper";
 
 import { useState } from "react";
 
@@ -21,6 +23,29 @@ export default function Home() {
 
   const { notifications, watchlist, portfolios } = data;
 
+  const makePortfolioCard = (portfolio:PortfolioJoined) => {
+    return (
+      <div key={portfolio.id} className={styles.portfolio}>
+        <Link
+          href={`/portfolio/${portfolio.id}`}
+        >
+          <div>
+            <h3>{portfolio.title}</h3>
+            <h3>{portfolio.returns?.totalValueToday}</h3>
+          </div>
+        </Link>
+      </div>
+    )
+  }
+
+  const makeNotification = (notification:Notification) => {
+    return (
+      <div className={styles.notification}>
+        {/* TODO: Continue after notifications implemented */}
+      </div>
+    )
+  }
+
   return (
     <>
       <Head>
@@ -31,27 +56,21 @@ export default function Home() {
       </Head>
       <main>
         <Navbar activePage="home" />
-        <div className={styles.container}>
+        <div className={styles.content}>
           <div className={styles.main}>
             {/* portfolios */}
-            <div className={styles.portfolios}>
+            <div className={styles.portfoliosBlock}>
               <h2>Portfolios</h2>
-              <div className={styles.portfoliosList}>
-                {portfolios.map((portfolio) => (
-                  <div key={portfolio.id} className={styles.portfolio}>
-                    <h3>{portfolio.title}</h3>
-                    {/* TODO returns */}
-                    {/* <p>{}</p> */}
-                  </div>
-                ))}
+              <div className={styles.portfolioCards}>
+                {portfolios.map(makePortfolioCard)}
               </div>
             </div>
           </div>
           <div className={styles.sidebar}>
             {/* notifications */}
-            <div className={styles.notifications}>
+            <div className={styles.notificationsBlock}>
               <h2>Notifications</h2>
-              <div className={styles.notificationsList}>
+              <div className={styles.notifications}>
                 {notifications.map((notification, key) => (
                   <div
                     key={`notification` + key}
