@@ -15,7 +15,9 @@ const endpoint = async (
     };
   }
 
+  console.log(req.body)
   const { portfolioId, userId } = req.body;
+  console.log(portfolioId, "+", userId)
 
   if (!portfolioId || !userId) {
     return {

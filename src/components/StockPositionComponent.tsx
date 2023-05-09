@@ -16,6 +16,8 @@ export const StockPositionComponent = (props: Props) => {
     const router = useRouter();
     //const { data: stockData, error: stockError } = useStock("" + router?.query?.ticker);
 
+    const createdDate = positionObj.createdAt.toString().substring(0,10);
+
     return (
         <Link href={"/stock/" + positionObj.ticker}>
             <div id={positionObj.id} className={styles.position_wrapper}>
@@ -36,7 +38,7 @@ export const StockPositionComponent = (props: Props) => {
                         <th className={styles.table_entry}>{returnData.asAmount} ({returnData.asPercentage})</th>
                         <th className={styles.table_entry}>{currentPrice * stockPositionData.amount}</th> */}
                         {/* TODO: Format Date */}
-                        <th className={styles.table_entry}>{positionObj.createdAt.toString()}</th>
+                        <th className={styles.table_entry}>{createdDate}</th>
                     </tr>
                 </table>
             </div>

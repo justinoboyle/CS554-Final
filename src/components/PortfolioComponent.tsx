@@ -17,7 +17,7 @@ export const PortfolioComponent = (props: Props) => {
 
   const formattedPercent =
     (returns > 0 ? "+" : "") + (returns * 100).toFixed(2) + "%";
-  const returnsStyle = returns > 0 ? styles.positive_returns : styles.negative_returns;
+  const returnsStyle = returns > 0 ? styles.positive_returns :  returns < 0 ? styles.negative_returns : "";
 
   return (
     <div id={portfolioData.id} className={styles.portfolio_wrapper}>
