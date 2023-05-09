@@ -39,7 +39,13 @@ function PortfolioPage() {
   }
 
   if (isLoading) return <p>Loading Portfolio Data...</p>;
-  if (!portfolio) return <p>Error: Failed to fetch Portfolio</p>;
+
+  if (!portfolio)
+    return (
+      <p>
+        Error: Failed to fetch Portfolio (are you signed in and is it yours?)
+      </p>
+    );
 
   return (
     <>

@@ -2,24 +2,29 @@
 
 import { useState, useEffect } from "react";
 
-// export const doesSecurityExist = async (ticker: string): Promise<boolean | undefined> => {
-//   const response = await fetch(`/api/tools/security/${ticker}`);
+import type { SecurityResponse } from "../../pages/api/tools/security/[id]";
+import type { ExternalResponse } from "../../helpers/errors";
 
-//   const data: ExternalResponse<SecurityResponse> = await response.json();
+export const doesSecurityExist = async (
+  ticker: string
+): Promise<boolean | undefined> => {
+  const response = await fetch(`/api/tools/security/${ticker}`);
 
-//   if (data.failed) {
-//     throw new Error(data.error);
-//   }
+  const data: ExternalResponse<SecurityResponse> = await response.json();
 
-//   return data.data?.doesSecurityExist;
-// };
+  if (data.failed) {
+    throw new Error(data.error);
+  }
+
+  return data.data?.doesSecurityExist;
+};
 
 export function useSecurity() {
-  const [ status, setStatus ] = useState<{
+  const [status, setStatus] = useState<{
     loading: boolean;
     doesSecurityExist?: boolean;
     error?: Error;
-  }>({loading: true});
+  }>({ loading: true });
 
   function fetchData(ticker: string) {
     fetch(`/api/tools/security/${ticker}`)
@@ -29,12 +34,15 @@ export function useSecurity() {
       .then((data) => {
         // console.log("Security", data);
         if (data.failed) {
-          setStatus({loading: false, error: data.error})
+          setStatus({ loading: false, error: data.error });
         } else {
-          setStatus({doesSecurityExist: data.data.doesSecurityExist, loading: false})
+          setStatus({
+            doesSecurityExist: data.data.doesSecurityExist,
+            loading: false,
+          });
         }
       });
   }
 
-  return { ...status, fn: fetchData};
+  return { ...status, fn: fetchData };
 }
