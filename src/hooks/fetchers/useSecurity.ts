@@ -10,17 +10,11 @@ export const doesSecurityExist = async (
   const response = await fetch(`/api/tools/security/${ticker}`);
 
   const data: ExternalResponse<SecurityResponse> = await response.json();
-  const data: ExternalResponse<SecurityResponse> = await response.json();
 
   if (data.failed) {
     throw new Error(data.error);
   }
-  if (data.failed) {
-    throw new Error(data.error);
-  }
 
-  return data.data?.doesSecurityExist;
-};
   return data.data?.doesSecurityExist;
 };
 
