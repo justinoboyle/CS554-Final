@@ -4,6 +4,8 @@ import { PrismaClient, Portfolio, StockPosition } from "@prisma/client";
 import {
   getStockPriceOnDate,
   getAllKnownPricesBetweenDateRange,
+  doesDatabaseHaveEODDataByDay,
+  persistEODDataForPastNYears,
 } from "./marketstackHelper";
 import prisma from "./dbHelper";
 
@@ -53,6 +55,47 @@ export const wrapReturns = async (
     // create date ranges
     const startDate = moment(yearAgo).format("YYYY-MM-DD");
     const endDate = moment(today).format("YYYY-MM-DD");
+
+    // pick a random weekday between startDay and endDay
+    let randomDay = moment(startDate, "YYYY-MM-DD").add(
+      Math.floor(Math.random() * 365),
+      "day"
+    );
+
+    // make sure not a weekend
+    while (randomDay.day() === 0 || randomDay.day() === 6) {
+      randomDay = moment(startDate, "YYYY-MM-DD").add(
+        Math.floor(Math.random() * 365),
+        "day"
+      );
+    }
+
+    // does db have that day for each position
+    const doesNotHavePrice = (
+      await Promise.all(
+        positions.map(async (position) => {
+          const ticker = position.ticker;
+          // doesDatabaseHaveEODDataByDay
+          const hasPrice = await doesDatabaseHaveEODDataByDay(
+            position.ticker,
+            randomDay.format("YYYY-MM-DD")
+          );
+
+          const ret = { ticker, hasPrice: !!hasPrice };
+
+          return ret;
+        })
+      )
+    ).filter(({ hasPrice }) => !hasPrice);
+
+    // if any don't have that price, get past 10 years of prices for each
+    await Promise.all(
+      doesNotHavePrice.map(async ({ ticker, hasPrice }) => {
+        // get all prices for that position
+        // persistEODDataForPastNYears
+        return await persistEODDataForPastNYears(ticker, 10);
+      })
+    );
 
     // for each security, generate a cache
     const cache = await Promise.all(
@@ -108,17 +151,10 @@ export const wrapReturns = async (
             // check is weekend
             const isWeekend =
               moment(day).day() === 0 || moment(day).day() === 6;
-            // if weekend, return -1
-            if (isWeekend) {
-              return {
-                ...position,
-                price: -1,
-              };
-            }
-            const price = await getStockPriceOnDate(position.ticker, day);
+            // we don't have that day. return -1
             return {
               ...position,
-              price: price,
+              price: -1,
             };
           })
         );
@@ -174,11 +210,24 @@ export const wrapReturns = async (
           moment(position.createdAt).isAfter(lastDayWithEarnings.date)
         )
           return 0;
-        const price = await getStockPriceOnDate(
-          position.ticker,
-          moment(position.createdAt).format("YYYY-MM-DD")
+          // check cache
+        const cacheForPosition = cache.find(
+          (cache) => cache.positionId === position.id
         );
-        return price * position.amount;
+        // if we have a cache for position, check if we have the price
+        // for this day
+        if (cacheForPosition) {
+          const priceForDay = cacheForPosition.prices.find(
+            (price) =>
+              new Date(position.createdAt).getTime() ===
+              new Date(price.date).getTime()
+          );
+          // if we have the price, return it
+          if (priceForDay) {
+            return priceForDay.close * position.amount;
+          }
+        }
+        return -1;
       })
     );
 

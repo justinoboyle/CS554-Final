@@ -8,6 +8,7 @@ import prisma from "../../../helpers/dbHelper";
 import {
   getEODUncachedByDateRange,
   persistEODDataByDay,
+  persistBulkEODDataByDay
 } from "../../../helpers/marketstackHelper";
 
 import { StockEODData, StockPosition, PrismaClient } from "@prisma/client";
@@ -166,19 +167,22 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
   logDebug("Fetch results length", fetchResults.length.toString());
 
-  const persistResults = await Promise.all(
-    fetchResults.map(async (data) => {
-      const { symbol, date, close } = data;
-      return await persistEODDataByDay(data);
-    })
-  );
+  // const persistResults = await Promise.all(
+  //   fetchResults.map(async (data) => {
+  //     const { symbol, date, close } = data;
+  //     return await persistEODDataByDay(data);
+  //   })
+  // );
 
-  logDebug("Persist results length", persistResults.length.toString());
+  // persistBulkEODDataByDay
+  await persistBulkEODDataByDay(fetchResults);
+
+  logDebug("Persist results", "done");
 
   res.status(200).json({
     success: true,
     message: "Successfully fetched and persisted data",
-    data: persistResults,
+    data: null,
   });
 };
 
