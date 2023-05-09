@@ -21,6 +21,7 @@ const endpoint = async (
 
   const prisma = new PrismaClient();
 
+  console.log(ticker.toString());
   const stock = await prisma.stockEODData.findFirst({
     where: {
       symbol: ticker.toString(),
