@@ -31,8 +31,8 @@ function Portfolios() {
     setTitle("");
   }
 
-  function handleDelete(portfolioId: string) {
-    return helpers.deletePortfolio(portfolioId);
+  async function handleDelete(portfolioId: string) {
+    return await helpers.deletePortfolio(portfolioId);
   }
 
   function buildPortfolios() {
