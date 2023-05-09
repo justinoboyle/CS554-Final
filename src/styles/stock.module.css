@@ -112,6 +112,6 @@
   font-weight: bold;
 }
 
-.italic {
+.italic, .first_option {
   font-style: italic;
 }
