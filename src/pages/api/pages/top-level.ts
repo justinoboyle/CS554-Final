@@ -6,10 +6,10 @@ import { SanitizedUser } from "../../../helpers/userHelper";
 import { constructHandler, InternalResponse } from "../../../helpers/errors";
 
 import type { UserSession } from "../../../helpers/userHelper";
-import { getPortfoliosByUser } from "../../../helpers/portfolioHelper";
+import { getPortfoliosByUser, calculatePortfolioReturns } from "../../../helpers/portfolioHelper";
 // import { createPortfolio } from "../../../helpers/portfolioHelper";
 
-import type { PortfolioWithPositions } from "../../../helpers/portfolioHelper";
+import type { PortfolioWithReturns } from "../../../helpers/portfolioHelper";
 
 // TODO update
 export type Watchlist = {};
@@ -26,7 +26,7 @@ async function dummyNotifications(): Promise<Notification[]> {
 /* The home page/dashboard will have an overview of all of the user’s subscribed stocks and invested portfolios, as well as a notification feed (described below).
  */
 export type TopLevelData = {
-  portfolios: PortfolioWithPositions[];
+  portfolios: PortfolioWithReturns[];
   watchlist: Watchlist;
   notifications: Notification[];
   user: SanitizedUser;
@@ -48,8 +48,16 @@ const endpoint = async (
 
   const user = session.user;
 
-  const [portfolios, watchlist, notifications] = await Promise.all([
-    getPortfoliosByUser(user.id),
+  const basePortfolios = await getPortfoliosByUser(user.id);
+  const portfolios:PortfolioWithReturns[] = await Promise.all(basePortfolios.map(async (portfolio): Promise<PortfolioWithReturns> => {
+    const returns = await calculatePortfolioReturns(portfolio);
+    return {
+      ...portfolio, 
+      returns: returns
+    }
+  }))
+
+  const [ watchlist, notifications] = await Promise.all([
     dummyWatchlist(),
     dummyNotifications(),
   ]);

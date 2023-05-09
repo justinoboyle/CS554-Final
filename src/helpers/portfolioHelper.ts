@@ -6,9 +6,13 @@ export type PortfolioWithPositions = Portfolio & {
   positions: StockPosition[];
 };
 
-type PortfolioReturns = {
+export type PortfolioReturns = {
   asAmount: number,
   asPercentage: number
+}
+
+export type PortfolioWithReturns = PortfolioWithPositions & {
+  returns: PortfolioReturns
 }
 
 export const createPortfolio = async (
