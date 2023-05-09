@@ -2,7 +2,6 @@ import { NotFoundError, BadRequestError } from "./errors";
 import { PrismaClient, Portfolio, StockPosition } from "@prisma/client";
 // import { getPriceAtTime } from "../helpers/stockPositionHelper";
 import {
-  getStockPriceOnDate,
   getAllKnownPricesBetweenDateRange,
   doesDatabaseHaveEODDataByDay,
   persistEODDataForPastNYears,

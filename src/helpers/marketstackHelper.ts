@@ -43,6 +43,7 @@ let keyConveyor: string[] = [];
 async function checkRedis(symbol: string, date: string) {
   const key = `${symbol}-${date}`;
   const redisOut = await client.get(key);
+  console.log(`Checked for ${key}, found ${redisOut}`)
   if (redisOut !== null){
     return Number(redisOut)
   }
@@ -53,9 +54,11 @@ async function setRedis(symbol: string, date: string, price: number) {
   const key = `${symbol}-${date}`;
   // check if already there
   if (await client.exists(key)) return;
+  console.log(`Cache miss on ${key}`)
   keyConveyor.push(key)
   await client.set(key, price.toString());
   // check length, remove oldest
+  console.log(`keyConveyor has ${keyConveyor.length} keys`)
   if (keyConveyor.length > 10000) {
     const oldestKey:string = keyConveyor.splice(0, 1)[0];
     await client.del(oldestKey);
