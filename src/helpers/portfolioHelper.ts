@@ -1,7 +1,13 @@
 import { NotFoundError, BadRequestError } from "./errors";
 import { PrismaClient, Portfolio, StockPosition } from "@prisma/client";
 // import { getPriceAtTime } from "../helpers/stockPositionHelper";
-import { getStockPriceOnDate } from "./marketstackHelper";
+import {
+  getStockPriceOnDate,
+  getAllKnownPricesBetweenDateRange,
+  doesDatabaseHaveEODDataByDay,
+  persistEODDataForPastNYears,
+} from "./marketstackHelper";
+import prisma from "./dbHelper";
 
 import moment from "moment-timezone";
 
@@ -18,7 +24,7 @@ type EarningsAt = {
   totalValue: number;
 };
 type WithReturns = {
-  returns: {
+  returns?: {
     earningsAt: EarningsAt[];
     totalPrincipal: number;
     totalValueToday: number;
@@ -36,116 +42,224 @@ export type PortfolioJoined = Portfolio & WithPositions & WithReturns;
 export const wrapReturns = async (
   portfolio: Portfolio & WithPositions
 ): Promise<PortfolioJoined> => {
-  const positions = portfolio.positions;
+  try {
+    const positions = portfolio.positions;
 
-  const today = moment().format("YYYY-MM-DD");
+    const today = moment().format("YYYY-MM-DD");
 
-  const yearAgo = moment().subtract(1, "year").format("YYYY-MM-DD");
+    const yearAgo = moment().subtract(1, "year").format("YYYY-MM-DD");
 
-  // list of 0 to 365
-  const listOfDays = Array.from(Array(365).keys());
+    // list of 0 to 365
+    const listOfDays = Array.from(Array(365).keys());
 
-  // for each day
-  const daysWithEarnings = await Promise.all(
-    listOfDays.map(async (i) => {
-      // add to yearAgo make sure new
-      const day = moment(yearAgo).add(i, "day").format("YYYY-MM-DD");
-      // get all the positions we had on that day
-      const positionsOnDay = positions.filter((position) => {
-        // use moment is before
-        const isAfter = moment(position.createdAt).isAfter(day);
-        return !isAfter;
-      });
+    // create date ranges
+    const startDate = moment(yearAgo).format("YYYY-MM-DD");
+    const endDate = moment(today).format("YYYY-MM-DD");
 
-      // get the price of each position on that day
-      const positionsOnDayWithPrice = await Promise.all(
-        positionsOnDay.map(async (position) => {
-          const price = await getStockPriceOnDate(position.ticker, day);
-          return {
-            ...position,
-            price: price,
-          };
-        })
+    // pick a random weekday between startDay and endDay
+    let randomDay = moment(startDate, "YYYY-MM-DD").add(
+      Math.floor(Math.random() * 365),
+      "day"
+    );
+
+    // make sure not a weekend
+    while (randomDay.day() === 0 || randomDay.day() === 6) {
+      randomDay = moment(startDate, "YYYY-MM-DD").add(
+        Math.floor(Math.random() * 365),
+        "day"
       );
-
-      const earningsAt: EarningsAt = {
-        date: day,
-        positions: positionsOnDayWithPrice.map((position) => ({
-          ticker: position.ticker,
-          amount: position.amount,
-          pricePerShare: position.price,
-        })),
-        totalValue: positionsOnDayWithPrice.reduce(
-          (acc, position) => acc + position.amount * position.price,
-          0
-        ),
-      };
-      //
-      return earningsAt;
-    })
-  );
-
-  let i: EarningsAt[] = [];
-  let flag = false;
-  for (let x of daysWithEarnings) {
-    if (!flag) {
-      if (x.totalValue == 0) continue;
     }
-    flag = true;
-    i.push(x);
-  }
 
-  // get the total price we paid out of pocket
-  // iterate through all positions, get the price of the position at the buy date
-  // add all of those up
+    // does db have that day for each position
+    const doesNotHavePrice = (
+      await Promise.all(
+        positions.map(async (position) => {
+          const ticker = position.ticker;
+          // doesDatabaseHaveEODDataByDay
+          const hasPrice = await doesDatabaseHaveEODDataByDay(
+            position.ticker,
+            randomDay.format("YYYY-MM-DD")
+          );
 
-  const lastDayWithEarnings =
-    daysWithEarnings?.length > 0
-      ? daysWithEarnings[daysWithEarnings.length - 1]
-      : null;
+          const ret = { ticker, hasPrice: !!hasPrice };
 
-  // promise all
-  const amountWePutIn = await Promise.all(
-    positions.map(async (position) => {
-      // not added after last day wit earnings!!!
-      if (
-        lastDayWithEarnings &&
-        moment(position.createdAt).isAfter(lastDayWithEarnings.date)
+          return ret;
+        })
       )
-        return 0;
-      const price = await getStockPriceOnDate(
-        position.ticker,
-        moment(position.createdAt).format("YYYY-MM-DD")
+    ).filter(({ hasPrice }) => !hasPrice);
+
+    // if any don't have that price, get past 10 years of prices for each
+    await Promise.all(
+      doesNotHavePrice.map(async ({ ticker, hasPrice }) => {
+        // get all prices for that position
+        // persistEODDataForPastNYears
+        return await persistEODDataForPastNYears(ticker, 10);
+      })
+    );
+
+    // for each security, generate a cache
+    const cache = await Promise.all(
+      positions.map(async (position) => {
+        const prices = await getAllKnownPricesBetweenDateRange(
+          position.ticker,
+          startDate,
+          endDate
+        );
+        return {
+          positionId: position.id,
+          createdAt: position.createdAt,
+          ticker: position.ticker,
+          prices: prices,
+        };
+      })
+    );
+
+    // for each day
+    const daysWithEarnings = await Promise.all(
+      listOfDays.map(async (i) => {
+        // add to yearAgo make sure new
+        const day = moment(yearAgo).add(i, "day").format("YYYY-MM-DD");
+        // get all the positions we had on that day
+        const positionsOnDay = positions.filter((position) => {
+          // use moment is before
+          const isAfter = moment(position.createdAt).isAfter(day);
+          return !isAfter;
+        });
+
+        // get the price of each position on that day
+        const positionsOnDayWithPrice = await Promise.all(
+          positionsOnDay.map(async (position) => {
+            // check local cache for positionId
+            const cacheForPosition = cache.find(
+              (cache) => cache.positionId === position.id
+            );
+            // if we have a cache for position, check if we have the price
+            // for this day
+            if (cacheForPosition) {
+              const priceForDay = cacheForPosition.prices.find(
+                (price) =>
+                  new Date(day).getTime() === new Date(price.date).getTime()
+              );
+              // if we have the price, return it
+              if (priceForDay) {
+                return {
+                  ...position,
+                  price: priceForDay.close,
+                };
+              }
+            }
+            // check is weekend
+            const isWeekend =
+              moment(day).day() === 0 || moment(day).day() === 6;
+            // we don't have that day. return -1
+            return {
+              ...position,
+              price: -1,
+            };
+          })
+        );
+
+        const earningsAt: EarningsAt = {
+          date: day,
+          positions: positionsOnDayWithPrice.map((position) => ({
+            ticker: position.ticker,
+            amount: position.amount,
+            pricePerShare: position.price,
+          })),
+          totalValue: positionsOnDayWithPrice
+            ?.filter((a) => a.price != -1)
+            .reduce(
+              (acc, position) => acc + position.amount * position.price,
+              0
+            ),
+        };
+        //
+        return earningsAt;
+      })
+    );
+
+    let i: EarningsAt[] = [];
+    let flag = false;
+    for (let x of daysWithEarnings) {
+      if (!flag) {
+        if (x.totalValue == 0) continue;
+      }
+      flag = true;
+      // remove -1
+      x.positions = x.positions.filter(
+        (position) => position.pricePerShare !== -1
       );
-      return price * position.amount;
-    })
-  );
+      i.push(x);
+    }
 
-  const reducedAmountWePutIn = amountWePutIn.reduce(
-    (acc, amount) => acc + amount,
-    0
-  );
+    // get the total price we paid out of pocket
+    // iterate through all positions, get the price of the position at the buy date
+    // add all of those up
 
-  // get the total value of the portfolio today
-  const totalValueToday =
-    daysWithEarnings?.length > 0
-      ? daysWithEarnings[daysWithEarnings.length - 1]?.totalValue
-      : 0;
+    const lastDayWithEarnings =
+      daysWithEarnings?.length > 0
+        ? daysWithEarnings[daysWithEarnings.length - 1]
+        : null;
 
-  const totalPercentChange =
-    reducedAmountWePutIn == 0
-      ? 0
-      : (totalValueToday - reducedAmountWePutIn) / reducedAmountWePutIn;
+    // promise all
+    const amountWePutIn = await Promise.all(
+      positions.map(async (position) => {
+        // not added after last day wit earnings!!!
+        if (
+          lastDayWithEarnings &&
+          moment(position.createdAt).isAfter(lastDayWithEarnings.date)
+        )
+          return 0;
+          // check cache
+        const cacheForPosition = cache.find(
+          (cache) => cache.positionId === position.id
+        );
+        // if we have a cache for position, check if we have the price
+        // for this day
+        if (cacheForPosition) {
+          const priceForDay = cacheForPosition.prices.find(
+            (price) =>
+              new Date(position.createdAt).getTime() ===
+              new Date(price.date).getTime()
+          );
+          // if we have the price, return it
+          if (priceForDay) {
+            return priceForDay.close * position.amount;
+          }
+        }
+        return -1;
+      })
+    );
 
-  return {
-    ...portfolio,
-    returns: {
-      earningsAt: i,
-      totalPrincipal: reducedAmountWePutIn,
-      totalValueToday: totalValueToday,
-      totalPercentChange,
-    },
-  };
+    const reducedAmountWePutIn = amountWePutIn.reduce(
+      (acc, amount) => acc + amount,
+      0
+    );
+
+    // get the total value of the portfolio today
+    const totalValueToday =
+      daysWithEarnings?.length > 0
+        ? daysWithEarnings[daysWithEarnings.length - 1]?.totalValue
+        : 0;
+
+    const totalPercentChange =
+      reducedAmountWePutIn == 0
+        ? 0
+        : (totalValueToday - reducedAmountWePutIn) / reducedAmountWePutIn;
+
+    return {
+      ...portfolio,
+      returns: {
+        earningsAt: i,
+        totalPrincipal: reducedAmountWePutIn,
+        totalValueToday: totalValueToday,
+        totalPercentChange,
+      },
+    };
+  } catch (e) {
+    console.error(e);
+    return portfolio;
+  }
 };
 
 export const createPortfolio = async (
@@ -153,8 +267,6 @@ export const createPortfolio = async (
   userId: string
 ): Promise<PortfolioJoined> => {
   if (!userId) throw new NotFoundError("User not found");
-
-  const prisma = new PrismaClient();
 
   const portfolio = await prisma.portfolio.create({
     data: {
@@ -174,7 +286,6 @@ export const getPortfolioById = async (
 ): Promise<PortfolioJoined> => {
   if (!portfolioId) throw new NotFoundError("User not found");
 
-  const prisma = new PrismaClient();
   const portfolio = await prisma.portfolio.findUnique({
     where: {
       id: portfolioId,
@@ -222,7 +333,6 @@ export const getPortfoliosByUser = async (
   userId: string
 ): Promise<PortfolioJoined[]> => {
   // also join securities
-  const prisma = new PrismaClient();
 
   const portfolios = await prisma.portfolio.findMany({
     where: {
@@ -244,8 +354,6 @@ export const deletePortfolio = async (
   portfolioId: string,
   userId: string
 ): Promise<boolean> => {
-  const prisma = new PrismaClient();
-
   const portfolio = await prisma.portfolio.findUnique({
     where: {
       id: portfolioId,
@@ -269,8 +377,6 @@ export const deletePortfolio = async (
 export const deleteSinglePosition = async (
   positionId: string
 ): Promise<boolean> => {
-  const prisma = new PrismaClient();
-
   await prisma.stockPosition.delete({
     where: {
       id: positionId,
@@ -286,8 +392,6 @@ export const addPosition = async (
   shares: number,
   dayPurchased: string
 ): Promise<StockPosition> => {
-  const prisma = new PrismaClient();
-
   const portfolio = await prisma.portfolio.findUnique({
     where: {
       id: portfolioId,

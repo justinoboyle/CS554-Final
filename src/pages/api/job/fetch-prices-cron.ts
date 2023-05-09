@@ -2,16 +2,19 @@
 
 import { NextApiRequest, NextApiResponse } from "next";
 
+import prisma from "../../../helpers/dbHelper";
+
+
 import {
   getEODUncachedByDateRange,
   persistEODDataByDay,
+  persistBulkEODDataByDay
 } from "../../../helpers/marketstackHelper";
 
 import { StockEODData, StockPosition, PrismaClient } from "@prisma/client";
 import moment from "moment-timezone";
 
 const getAllUniqueTrackedTickers = async (): Promise<string[]> => {
-  const prisma = new PrismaClient();
   const allTrackedSecurities = await prisma.stockPosition.findMany({
     select: {
       ticker: true,
@@ -24,7 +27,6 @@ const getAllUniqueTrackedTickers = async (): Promise<string[]> => {
 const getMostRecentClosePrice = async (
   ticker: string
 ): Promise<StockEODData | null> => {
-  const prisma = new PrismaClient();
   const mostRecentClosePrice = await prisma.stockEODData.findFirst({
     where: {
       symbol: ticker,
@@ -165,19 +167,22 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
   logDebug("Fetch results length", fetchResults.length.toString());
 
-  const persistResults = await Promise.all(
-    fetchResults.map(async (data) => {
-      const { symbol, date, close } = data;
-      return await persistEODDataByDay(data);
-    })
-  );
+  // const persistResults = await Promise.all(
+  //   fetchResults.map(async (data) => {
+  //     const { symbol, date, close } = data;
+  //     return await persistEODDataByDay(data);
+  //   })
+  // );
 
-  logDebug("Persist results length", persistResults.length.toString());
+  // persistBulkEODDataByDay
+  await persistBulkEODDataByDay(fetchResults);
+
+  logDebug("Persist results", "done");
 
   res.status(200).json({
     success: true,
     message: "Successfully fetched and persisted data",
-    data: persistResults,
+    data: null,
   });
 };
 
