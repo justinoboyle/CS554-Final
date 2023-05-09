@@ -35,6 +35,10 @@ export const getEODUncachedFromMarketstack = async (
   symbol: string,
   date: string
 ): Promise<MarketstackEod> => {
+  // check if we're running in a browser
+  if (typeof window !== "undefined") {
+    throw new Error("Cannot call this function from the browser");
+  }
   const { data } = await axios.get(
     `http://api.marketstack.com/v1/eod?access_key=${MARKETSTACK_API_KEY}&symbols=${symbol}&date_from=${date}&date_to=${date}`
   );
@@ -51,6 +55,10 @@ export const getEODUncachedByDateRange = async (
   dateFrom: string,
   dateTo: string
 ): Promise<MarketstackEod[]> => {
+  // check if we're running in a browser
+  if (typeof window !== "undefined") {
+    throw new Error("Cannot call this function from the browser");
+  }
   const { data } = await axios.get(
     `http://api.marketstack.com/v1/eod?access_key=${MARKETSTACK_API_KEY}&symbols=${symbol}&date_from=${dateFrom}&date_to=${dateTo}`
   );
