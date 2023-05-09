@@ -43,21 +43,6 @@ export const getStockPositionById = async (
     return stockPosition;
 };
 
-// TODO: Needs more testing
-export const getPriceAtTime = async (
-    ticker: string,
-    time: Date
-) : Promise<number> => {
-    const { data } = await axios.get(
-        `http://api.marketstack.com/v1/eod?access_key=${MARKETSTACK_API_KEY}&symbols=${ticker}&date_from=${time}&date_to=${time}`
-      );
-    
-      const { data: eodData } = data as MarketstackResponse<MarketstackEod[]>;
-    
-      if (!eodData.length) throw new Error("No data found");
-    
-      return eodData[0].close;
-}
 
 export const calculateStockPositionReturns = (
     stockPosition: StockPosition,

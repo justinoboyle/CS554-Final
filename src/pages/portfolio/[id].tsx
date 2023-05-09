@@ -1,59 +1,70 @@
 import { PortfolioComponent } from "../../components/PortfolioComponent";
 import { StockPositionComponent } from "../../components/StockPositionComponent";
-import { PortfolioWithPositions } from '../../helpers/portfolioHelper'
-import { useRouter } from 'next/router';
-import { useState, useEffect } from 'react';
+import type { PortfolioJoined } from "../../helpers/portfolioHelper";
+import { useRouter } from "next/router";
+import { useState, useEffect } from "react";
 import styles from "@/styles/portfolios.module.css";
 import useTopLevelUserData from "../../hooks/useTopLevelUserData";
-
-
+import { Navbar } from "../../components/Navbar";
+import AddStockModal from "../../components/AddStockModal";
+import moment from "moment-timezone";
 function PortfolioPage() {
-    const router = useRouter();
-    const id = "" + router?.query?.id;
-    const { data, isLoading } = useTopLevelUserData();
-    const [portfolioData, setPortfolioData] = useState<PortfolioWithPositions | undefined>(undefined);
-    
-    useEffect(() => {
-        async function fetchData() {
-            try {
-                const portofolio = isLoading ? undefined : 
-                    data?.portfolios?.find((port : PortfolioWithPositions) => port.id === id);
-                setPortfolioData(portofolio);
+  const router = useRouter();
+  const id = "" + router?.query?.id;
+  const { data, isLoading, helpers } = useTopLevelUserData();
+  const [showModal, setShowModal] = useState<boolean>(false);
 
-            } catch (e) {
-                console.log(e);
-            }
-        };
-        fetchData();
-    }, [isLoading])
+  const portfolio = data?.portfolios?.find(
+    (port: PortfolioJoined) => port.id === id
+  );
 
-    if(isLoading) return (<p>Loading Portfolio Data...</p>);
-    if (!portfolioData) return (<p>Error: Failed to fetch Portfolio</p>)
+  const onAddStock = async (
+    symbol: string,
+    shareCount: number,
+    datePurchased: Date
+  ) => {
+    const formattedDate = moment(datePurchased).format("YYYY-MM-DD");
+    await helpers?.addPositionToPortfolio(
+      id,
+      symbol,
+      shareCount,
+      formattedDate
+    );
+  };
 
-    const portfolioHeader = (<PortfolioComponent key={id} id={id} portfolioObj={portfolioData}/>);
+  if (isLoading) return <p>Loading Portfolio Data...</p>;
+  if (!portfolio) return <p>Error: Failed to fetch Portfolio</p>;
 
-    const addStockButton = (
+  return (
+    <>
+      <Navbar activePage={"portfolios"} />
+      <AddStockModal
+        modalIsOpen={showModal}
+        setIsOpen={(isOpen: boolean) => setShowModal(isOpen)}
+        onAdd={onAddStock}
+      />
+      <div>
+        {portfolio && (
+          <PortfolioComponent key={id} id={id} portfolioObj={portfolio} />
+        )}
+
         <div className={styles.button_wrapper}>
-              <button className={`${styles.button} ${styles.add_button}`}>
-                Add stock
-              </button>
+          <button
+            className={`${styles.button} ${styles.add_button}`}
+            onClick={() => setShowModal(true)}
+          >
+            Add stock
+          </button>
         </div>
-    );
-
-    const currentPositions = portfolioData.positions.map((position) => {
-        return <StockPositionComponent key={position.id} positionObj={position}/>
-    });
-
-    return (
-        <div>
-            {portfolioHeader}
-            {addStockButton}
-            <div id={"positions-list"}>
-                <p>Current Positions:</p>
-                {currentPositions}
-            </div> 
+        <div id={"positions-list"}>
+          <p>Current Positions:</p>
+          {portfolio.positions.map((position) => (
+            <StockPositionComponent key={position.id} positionObj={position} />
+          ))}
         </div>
-    );
+      </div>
+    </>
+  );
 }
 
 export default PortfolioPage;

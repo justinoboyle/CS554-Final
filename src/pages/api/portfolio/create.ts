@@ -4,11 +4,11 @@ import { Portfolio } from '@prisma/client';
 import { constructHandler, InternalResponse } from "../../../helpers/errors";
 import { createPortfolio } from "../../../helpers/portfolioHelper";
 
-import type { PortfolioWithPositions } from "../../../helpers/portfolioHelper";
+import type { PortfolioJoined } from "../../../helpers/portfolioHelper";
 
 const endpoint = async (
   req: NextApiRequest
-): Promise<InternalResponse<PortfolioWithPositions | null>> => {
+): Promise<InternalResponse<PortfolioJoined | null>> => {
   if (req.method !== "POST") {
     return {
       data: null,
