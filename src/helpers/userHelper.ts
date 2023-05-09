@@ -7,7 +7,7 @@ import {
   BadRequestError,
 } from "./errors";
 import { getPortfolioById } from "./portfolioHelper";
-import type { PortfolioJoined } from "./portfolioHelper";
+import { PortfolioJoined, wrapReturns } from "./portfolioHelper";
 
 // Don't send hashed password back to user
 export type SanitizedUser = {
@@ -128,10 +128,16 @@ export const getUserPortfolios = async (
   if (!portfolios) {
     return [];
   }
-  return portfolios;
+  // map to wrapReturns
+  const portfoliosWithReturns = await Promise.all(
+    portfolios.map((portfolio) => wrapReturns(portfolio))
+  );
+  return portfoliosWithReturns;
 };
 
-export const getUserWatchlist = async (userId: string): Promise<StockEODData[]> => {
+export const getUserWatchlist = async (
+  userId: string
+): Promise<StockEODData[]> => {
   if (!userId) throw new BadRequestError("Invalid user ID");
 
   const prisma = new PrismaClient();
@@ -140,18 +146,16 @@ export const getUserWatchlist = async (userId: string): Promise<StockEODData[]> 
   if (!user) throw new NotFoundError("User not found");
 
   let watchlist = Promise.all(
-    user.watchlist.map(
-      async (stockId) => {
-        let stock = await prisma.stockEODData.findUnique({
-          where: {
-            id: stockId,
-          }
-        });
-        if (!stock) throw new NotFoundError("Stock not found");
-        return stock;
-      }
-    )
-  )
-  
+    user.watchlist.map(async (stockId) => {
+      let stock = await prisma.stockEODData.findUnique({
+        where: {
+          id: stockId,
+        },
+      });
+      if (!stock) throw new NotFoundError("Stock not found");
+      return stock;
+    })
+  );
+
   return watchlist;
-}
+};

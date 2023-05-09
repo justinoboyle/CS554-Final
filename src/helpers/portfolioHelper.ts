@@ -33,7 +33,7 @@ type PortfolioReturns = {
 
 export type PortfolioJoined = Portfolio & WithPositions & WithReturns;
 
-const addReturns = async (
+export const wrapReturns = async (
   portfolio: Portfolio & WithPositions
 ): Promise<PortfolioJoined> => {
   const positions = portfolio.positions;
@@ -166,7 +166,7 @@ export const createPortfolio = async (
     },
   });
 
-  return addReturns(portfolio);
+  return wrapReturns(portfolio);
 };
 
 export const getPortfolioById = async (
@@ -186,7 +186,7 @@ export const getPortfolioById = async (
 
   if (!portfolio) throw new NotFoundError("Portfolio not found");
 
-  return addReturns(portfolio);
+  return wrapReturns(portfolio);
 };
 
 // takes portfolio with positions
@@ -235,7 +235,7 @@ export const getPortfoliosByUser = async (
 
   //map to addReturns
   const portfoliosWithReturns = await Promise.all(
-    portfolios.map((portfolio) => addReturns(portfolio))
+    portfolios.map((portfolio) => wrapReturns(portfolio))
   );
   return portfoliosWithReturns;
 };
