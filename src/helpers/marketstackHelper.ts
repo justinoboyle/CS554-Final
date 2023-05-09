@@ -83,23 +83,19 @@ export const getEODUncachedByDateRange = async (
 
   if (!eodData.length) throw new Error("No data found");
   // find all gaps between days
-  const gaps = eodData.reduce((acc, curr, index) => {
-    if (index === 0) return acc;
-    const currDate = moment(curr.date);
-    const prevDate = moment(eodData[index - 1].date);
-    const diff = currDate.diff(prevDate, "days");
-    if (diff > 1) {
-      acc.push({
-        dateFrom: prevDate.format("YYYY-MM-DD"),
-        dateTo: currDate.format("YYYY-MM-DD"),
-      });
-    }
-    return acc;
-  }, [] as { dateFrom: string; dateTo: string }[]);
-
-  console.log(
-    "Gaps: " + gaps.length + " between " + dateFrom + " and " + dateTo
-  );
+  // const gaps = eodData.reduce((acc, curr, index) => {
+  //   if (index === 0) return acc;
+  //   const currDate = moment(curr.date);
+  //   const prevDate = moment(eodData[index - 1].date);
+  //   const diff = currDate.diff(prevDate, "days");
+  //   if (diff > 1) {
+  //     acc.push({
+  //       dateFrom: prevDate.format("YYYY-MM-DD"),
+  //       dateTo: currDate.format("YYYY-MM-DD"),
+  //     });
+  //   }
+  //   return acc;
+  // }, [] as { dateFrom: string; dateTo: string }[]);
 
   return eodData;
 };
