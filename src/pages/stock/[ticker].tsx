@@ -21,7 +21,6 @@ function Stock() {
   const [disabled, setDisabled] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const stock = stockData?.data;
   const portfolios = topLevelData?.portfolios || [];
 
   function handleWatchOnClick(e: any) {
@@ -40,6 +39,7 @@ function Stock() {
     } catch(e) {
       console.log(e);
     }
+    toast.success("Successfully added to portfolio");
     setIsLoading(false);
     setDisabled(false);
   }
@@ -53,10 +53,11 @@ function Stock() {
     }
   }
 
-  if (stockError) return <Error message={stockError}/>
-  if (!stockData) return <Loading />
   if (stockData.doesSecurityExist === false) return <Error message={"Stock ticker does not exist!"}/>
+  if (!stockData) return <Loading />
 
+  console.log(stockData, stockError);
+  const stock = stockData?.data;
   /* 
   "open": 129.8,
   "high": 133.04,
