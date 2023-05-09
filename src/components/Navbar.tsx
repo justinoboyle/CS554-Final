@@ -3,7 +3,7 @@ import styles from "./Navbar.module.css";
 
 import useUser from "../hooks/useUser";
 
-type Pages = "home" | "about" | "portfolios" | "watchlist" | "";
+type Pages = "home" | "about" | "portfolios" | "watchlist" | "alerts" | "";
 
 // handle form submit
 const handleLogout = async (e: any) => {
@@ -52,6 +52,14 @@ export const Navbar = ({ activePage = "home" }: { activePage: Pages }) => {
               href="/portfolios"
             >
               Portfolios
+            </Link>
+          </li>
+          <li>
+            <Link
+              className={activePage === "alerts" ? styles.active : ""}
+              href="/alerts"
+            >
+              Alerts
             </Link>
           </li>
           <li>
