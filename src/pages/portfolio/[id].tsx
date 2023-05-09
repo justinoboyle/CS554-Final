@@ -1,6 +1,6 @@
 import { PortfolioComponent } from "../../components/PortfolioComponent";
 import { StockPositionComponent } from "../../components/StockPositionComponent";
-import { PortfolioJoined } from "../../helpers/portfolioHelper";
+import type { PortfolioJoined } from "../../helpers/portfolioHelper";
 import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
 import styles from "@/styles/portfolios.module.css";
@@ -8,42 +8,6 @@ import useTopLevelUserData from "../../hooks/useTopLevelUserData";
 import { Navbar } from "../../components/Navbar";
 import AddStockModal from "../../components/AddStockModal";
 import moment from "moment-timezone";
-
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-} from "chart.js";
-import { Line } from "react-chartjs-2";
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend
-);
-
-export const options = {
-  responsive: true,
-  plugins: {
-    legend: {
-      position: "top" as const,
-    },
-    title: {
-      display: true,
-      text: "Total portfolio close price over time",
-    },
-  },
-};
-
 function PortfolioPage() {
   const router = useRouter();
   const id = "" + router?.query?.id;

@@ -1,4 +1,4 @@
-import { PortfolioJoined } from "../helpers/portfolioHelper";
+import type { PortfolioJoined } from "../helpers/portfolioHelper";
 import { useState, useEffect } from "react";
 
 type Props = {

@@ -39,13 +39,21 @@ export const getEODUncachedFromMarketstack = async (
   if (typeof window !== "undefined") {
     throw new Error("Cannot call this function from the browser");
   }
-  const { data } = await axios.get(
+  const { data, headers, status } = await axios.get(
     `http://api.marketstack.com/v1/eod?access_key=${MARKETSTACK_API_KEY}&symbols=${symbol}&date_from=${date}&date_to=${date}`
   );
 
   const { data: eodData } = data as MarketstackResponse<MarketstackEod[]>;
 
-  if (!eodData.length) throw new Error("No data found for day " + date);
+  if (!eodData.length) {
+    // check if we're being rate limited
+    if (status === 429) {
+      console.log("Rate limited!");
+    }
+    throw new Error(
+      "No data found for day " + date + " -- got status " + status
+    );
+  }
 
   return eodData[0];
 };
