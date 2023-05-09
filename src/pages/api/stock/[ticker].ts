@@ -31,6 +31,7 @@ const endpoint = async (
     }
   });
 
+  
   if (!stock) throw new NotFoundError("Ticker not found");
 
   return {
