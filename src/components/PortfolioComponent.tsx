@@ -1,4 +1,5 @@
 import type { PortfolioJoined } from "../helpers/portfolioHelper";
+import styles from "./PortfolioComponent.module.css";
 import { useState, useEffect } from "react";
 
 type Props = {
@@ -6,30 +7,26 @@ type Props = {
   portfolioObj: PortfolioJoined;
 };
 
-type PortfolioReturns = {
-  asAmount: number;
-  asPercentage: number;
-};
-
 // takes portfolio id as key from props
 export const PortfolioComponent = (props: Props) => {
   const portfolioData = props.portfolioObj;
 
-  if (!portfolioData) return <p>Loading...</p>;
+  if (!portfolioData || !portfolioData.returns) return <p>Loading...</p>;
 
-  const returns = portfolioData?.returns?.totalPercentChange;
+  const returns = portfolioData.returns.totalPercentChange;
 
   const formattedPercent =
-    returns && (returns > 0 ? "+" : "") + (returns * 100).toFixed(2) + "%";
+    (returns > 0 ? "+" : "") + (returns * 100).toFixed(2) + "%";
+  const returnsStyle = returns > 0 ? styles.positive_returns : styles.negative_returns;
 
   return (
-    <div id={portfolioData.id}>
-      <h2 id="portfolio-header">
+    <div id={portfolioData.id} className={styles.portfolio_wrapper}>
+      <h2 className={styles.portfolio_header}>
         {portfolioData ? portfolioData.title : "Unknown Portfolio Title"}
       </h2>
       <div>
-        {formattedPercent} with {portfolioData?.positions?.length} positions
-        (all-time)
+        <span className = {returnsStyle}>{formattedPercent}</span> with {portfolioData?.positions?.length} positions
+        (Overall Returns)
       </div>
     </div>
   );

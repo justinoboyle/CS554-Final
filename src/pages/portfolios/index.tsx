@@ -42,7 +42,7 @@ function Portfolios() {
       result.push(
         <div className={styles.portfolio_wrapper} key={portfolio.id}>
           <div className={styles.portfolio_information}>
-            <Link href={"/portfolio/" + portfolio.id}>
+            <Link href={"/portfolios/" + portfolio.id}>
               <PortfolioComponent key={portfolio.id} id={portfolio.id} portfolioObj={portfolio} />
             </Link>
           </div>
