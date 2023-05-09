@@ -65,7 +65,7 @@ function PortfolioPage() {
         <div id={"positions-list"}>
           <p>Current Positions:</p>
           {portfolio.positions.map((position) => (
-            <div className={styles.position_wrapper}>
+            <div key={position.id} className={styles.position_wrapper}>
               <StockPositionComponent key={position.id} positionObj={position} />
               <div className={styles.button_wrapper}>
                 <button
