@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Inter } from "next/font/google";
 import styles from "@/styles/Home.module.css";
 import { Navbar } from "../components/Navbar";
+import useUser from "../hooks/useUser"
 import useHomePage from "../hooks/useTopLevelUserData";
 import { PortfolioJoined } from "@/helpers/portfolioHelper";
 
@@ -12,6 +13,11 @@ const inter = Inter({ subsets: ["latin"] });
 
 export default function Home() {
   const { data, isLoading } = useHomePage();
+
+  useUser({
+    redirectTo: '/auth/login/',
+    redirectIfFound: false
+  });
 
   if (isLoading) {
     return <div>Loading...</div>;
