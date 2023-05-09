@@ -1,4 +1,4 @@
-import { PrismaClient, User, Portfolio } from "@prisma/client";
+import { PrismaClient, User, Portfolio, StockEODData } from "@prisma/client";
 import bcrypt from "bcrypt";
 import {
   AlreadyExistsError,
@@ -7,6 +7,8 @@ import {
   BadRequestError,
 } from "./errors";
 import { getPortfolioById } from "./portfolioHelper";
+import { PortfolioJoined, wrapReturns } from "./portfolioHelper";
+import prisma from "./dbHelper";
 
 // Don't send hashed password back to user
 export type SanitizedUser = {
@@ -14,6 +16,7 @@ export type SanitizedUser = {
   email: string;
   name?: string;
   portfolioIds: string[];
+  watchlist: string[];
 };
 
 export type UserSession = {
@@ -27,8 +30,6 @@ export const createUser = async (
   password: string,
   name: string
 ): Promise<SanitizedUser> => {
-  const prisma = new PrismaClient();
-
   // check if the email exists
   const userExists = await prisma.user.findUnique({
     where: {
@@ -57,8 +58,6 @@ export const authorizeLogin = async (
   email: string,
   password: string
 ): Promise<SanitizedUser> => {
-  const prisma = new PrismaClient();
-
   const user = await prisma.user.findUnique({
     where: {
       email,
@@ -88,13 +87,13 @@ export const sanitizeUser = (user: User): SanitizedUser => {
     email: user.email,
     name: user?.name || undefined,
     portfolioIds: user.portfolioIds,
+    watchlist: user.watchlist,
   };
 };
 
 export const getUserById = async (
   id: string
 ): Promise<SanitizedUser | null> => {
-  const prisma = new PrismaClient();
 
   const user = await prisma.user.findUnique({
     where: {
@@ -107,18 +106,50 @@ export const getUserById = async (
   return sanitizeUser(user);
 };
 
-export const getUserPortfolios = async (id: string): Promise<Portfolio[]> => {
-  const prisma = new PrismaClient();
+export const getUserPortfolios = async (
+  userId: string | undefined
+): Promise<PortfolioJoined[]> => {
+  if (!userId) throw new BadRequestError("Invalid user ID");
 
-  const user = await getUserById(id);
+  const portfolios = await prisma.portfolio.findMany({
+    where: {
+      userId,
+    },
+    include: {
+      positions: true,
+    },
+  });
+
+  if (!portfolios) {
+    return [];
+  }
+  // map to wrapReturns
+  const portfoliosWithReturns = await Promise.all(
+    portfolios.map((portfolio) => wrapReturns(portfolio))
+  );
+  return portfoliosWithReturns;
+};
+
+export const getUserWatchlist = async (
+  userId: string
+): Promise<StockEODData[]> => {
+  if (!userId) throw new BadRequestError("Invalid user ID");
+
+  const user = await getUserById(userId);
 
   if (!user) throw new NotFoundError("User not found");
 
-  let portfolios = Promise.all(
-    user.portfolioIds.map(
-      async (portfolioId) => await getPortfolioById(portfolioId)
-    )
+  let watchlist = Promise.all(
+    user.watchlist.map(async (stockId) => {
+      let stock = await prisma.stockEODData.findUnique({
+        where: {
+          id: stockId,
+        },
+      });
+      if (!stock) throw new NotFoundError("Stock not found");
+      return stock;
+    })
   );
 
-  return portfolios;
+  return watchlist;
 };

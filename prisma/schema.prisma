@@ -25,19 +25,23 @@ model User {
   portfolioIds   String[]
   triggers       Trigger[] 
   alerts         Alert[]
+  watchlist      String[]
 }
 
 model StockPosition {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  createdAt DateTime @default(now())
-  amount    Int
+  id          String     @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt   DateTime   @default(now())
+  ticker      String
+  amount      Int
+  portfolio   Portfolio? @relation(fields: [portfolioId], references: [id])
+  portfolioId String?    @db.ObjectId
 }
 
 model Portfolio {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  id        String          @id @default(auto()) @map("_id") @db.ObjectId
   title     String
   userId    String
-  positions String[] @default([])
+  positions StockPosition[] @relation()
 }
 
 model Trigger {
@@ -65,6 +69,10 @@ model Alert {
   triggerId String   @db.ObjectId
   trigger   Trigger  @relation(fields: [triggerId], references: [id])
   price     Float
+}
+model KnownHolidays {
+  id   String   @id @default(auto()) @map("_id") @db.ObjectId
+  date DateTime
 }
 
 model StockEODData {
