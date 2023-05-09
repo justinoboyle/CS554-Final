@@ -36,6 +36,9 @@ const endpoint = async (
   req: NextApiRequest,
   session?: UserSession
 ): Promise<InternalResponse<TopLevelData | undefined>> => {
+
+  // start timing
+  const start = Date.now();
   // require login
   if (!session?.isLoggedIn || !session.user) {
     return {
@@ -53,6 +56,10 @@ const endpoint = async (
     dummyWatchlist(),
     dummyNotifications(),
   ]);
+
+  // end timing
+  const end = Date.now();
+  console.log(`Debug: top level endpoint took ${end - start} ms`);
 
   return {
     data: {
