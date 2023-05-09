@@ -8,6 +8,7 @@ import {
 } from "./errors";
 import { getPortfolioById } from "./portfolioHelper";
 import { PortfolioJoined, wrapReturns } from "./portfolioHelper";
+import prisma from "./dbHelper";
 
 // Don't send hashed password back to user
 export type SanitizedUser = {
@@ -29,8 +30,6 @@ export const createUser = async (
   password: string,
   name: string
 ): Promise<SanitizedUser> => {
-  const prisma = new PrismaClient();
-
   // check if the email exists
   const userExists = await prisma.user.findUnique({
     where: {
@@ -59,8 +58,6 @@ export const authorizeLogin = async (
   email: string,
   password: string
 ): Promise<SanitizedUser> => {
-  const prisma = new PrismaClient();
-
   const user = await prisma.user.findUnique({
     where: {
       email,
@@ -97,7 +94,6 @@ export const sanitizeUser = (user: User): SanitizedUser => {
 export const getUserById = async (
   id: string
 ): Promise<SanitizedUser | null> => {
-  const prisma = new PrismaClient();
 
   const user = await prisma.user.findUnique({
     where: {
@@ -115,7 +111,6 @@ export const getUserPortfolios = async (
 ): Promise<PortfolioJoined[]> => {
   if (!userId) throw new BadRequestError("Invalid user ID");
 
-  const prisma = new PrismaClient();
   const portfolios = await prisma.portfolio.findMany({
     where: {
       userId,
@@ -140,7 +135,6 @@ export const getUserWatchlist = async (
 ): Promise<StockEODData[]> => {
   if (!userId) throw new BadRequestError("Invalid user ID");
 
-  const prisma = new PrismaClient();
   const user = await getUserById(userId);
 
   if (!user) throw new NotFoundError("User not found");

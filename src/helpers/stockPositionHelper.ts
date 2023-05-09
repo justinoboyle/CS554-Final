@@ -3,6 +3,7 @@ import { PrismaClient, StockPosition } from "@prisma/client";
 import { NotFoundError } from "./errors";
 import { MARKETSTACK_API_KEY, MarketstackResponse, MarketstackEod } from "./marketstackHelper"
 import axios from "axios";
+import prisma from "./dbHelper";
 
 type StockPositionReturns = {
     asAmount: number,
@@ -14,7 +15,6 @@ export const createStockPosition = async (
     ticker: string,
     amount: number,
 ): Promise<StockPosition> => {
-    const prisma = new PrismaClient();
 
     const stockPosition = await prisma.stockPosition.create({
         data: {
@@ -30,7 +30,6 @@ export const createStockPosition = async (
 export const getStockPositionById = async (
     id: string
   ): Promise<StockPosition> => {
-    const prisma = new PrismaClient();
   
     const stockPosition = await prisma.stockPosition.findUnique({
       where: {
