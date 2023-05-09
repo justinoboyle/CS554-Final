@@ -1,0 +1,117 @@
+.main_wrapper {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  margin: 20px;
+}
+
+.stock_wrapper {
+  flex-grow: 8;
+}
+
+.form_wrapper {
+  flex-grow: 1;
+}
+
+.table {
+  margin-top: 15px;
+  border-collapse: collapse;
+}
+
+.table_header, .table_value {
+  border: 1px solid lightgray;
+  padding: 5px 8px;
+}
+
+.table_header {
+  text-align: left;
+}
+
+.table_value {
+  text-align: right;
+}
+
+.button_wrapper {
+  display: flex;
+  justify-content: right;
+  margin: 15px 0px 15px 15px;
+}
+
+.watch_button {
+  padding: 8px 16px;
+  font-size: 15px;
+  font-weight: bold;
+  border: none;
+  border-radius: 5px;
+  background-color: rgb(231, 137, 14);
+}
+
+.watch_button:hover {
+  background-color: rgb(158, 103, 0);
+}
+
+.form {
+  border: 1px solid lightgray;
+  padding: 15px 30px;
+}
+
+.form_title {
+  margin-bottom: 20px;
+}
+
+.form_group {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  margin: 15px 0px;
+}
+
+.form_label {
+  display: inline;
+  margin-right: 15px;
+}
+
+.form_input {
+  display: inline;
+  padding-right: 3px;
+  text-align: right;
+}
+
+.buy_button {
+  padding: 10px 15px;
+  font-size: 15px;
+  font-weight: bold;
+  border: none;
+  border-radius: 25px;
+  background-color: rgb(0, 168, 0);
+}
+
+.buy_button:hover {
+  background-color: green;
+}
+
+.blank_button {
+  padding: 10px 15px;
+  font-size: 15px;
+  font-weight: bold;
+  border: 1px solid rgb(0, 168, 0);
+  border-radius: 25px;
+  background-color: transparent;
+}
+
+.span {
+  text-align: right;
+  flex-grow: 1;
+}
+
+.horizontal_line {
+  margin: 20px 0px;
+}
+
+.bold {
+  font-weight: bold;
+}
+
+.italic, .first_option {
+  font-style: italic;
+}

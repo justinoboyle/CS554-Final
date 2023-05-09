@@ -115,6 +115,11 @@ export default function AddStockModal(props: Props) {
     >
       <h3>Add a security</h3>
       <p className={styles.error}>{error}</p>
+      {loading && (
+        <p className={styles.loading}>
+          Fetching price data, this can take a minute...
+        </p>
+      )}
       <form className={styles.form} onSubmit={(e) => e.preventDefault()}>
         <div className={styles.formControl}>
           <label htmlFor="symbol">Symbol</label>

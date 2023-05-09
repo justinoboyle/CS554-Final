@@ -42,6 +42,11 @@ model Portfolio {
   positions StockPosition[] @relation()
 }
 
+model KnownHolidays {
+  id   String   @id @default(auto()) @map("_id") @db.ObjectId
+  date DateTime
+}
+
 model StockEODData {
   id           String   @id @default(auto()) @map("_id") @db.ObjectId
   open         Float

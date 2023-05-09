@@ -20,7 +20,7 @@ export const PortfolioComponent = (props: Props) => {
   const returns = portfolioData?.returns?.totalPercentChange;
 
   const formattedPercent =
-    (returns > 0 ? "+" : "") + (returns * 100).toFixed(2) + "%";
+    returns && (returns > 0 ? "+" : "") + (returns * 100).toFixed(2) + "%";
 
   return (
     <div id={portfolioData.id}>
@@ -29,6 +29,7 @@ export const PortfolioComponent = (props: Props) => {
       </h2>
       <div>
         {formattedPercent} with {portfolioData?.positions?.length} positions
+        (all-time)
       </div>
     </div>
   );
