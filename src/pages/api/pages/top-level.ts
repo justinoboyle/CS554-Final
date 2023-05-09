@@ -8,7 +8,7 @@ import { constructHandler, InternalResponse } from "../../../helpers/errors";
 import type { UserSession } from "../../../helpers/userHelper";
 import { getPortfoliosByUser } from "../../../helpers/portfolioHelper";
 
-import type { PortfolioWithPositions } from "../../../helpers/portfolioHelper";
+import type { PortfolioJoined } from "../../../helpers/portfolioHelper";
 
 // TODO update
 export type Watchlist = {};
@@ -25,7 +25,7 @@ async function dummyNotifications(): Promise<Notification[]> {
 /* The home page/dashboard will have an overview of all of the user’s subscribed stocks and invested portfolios, as well as a notification feed (described below).
  */
 export type TopLevelData = {
-  portfolios: PortfolioWithPositions[];
+  portfolios: PortfolioJoined[];
   watchlist: Watchlist;
   notifications: Notification[];
   user: SanitizedUser;
@@ -35,6 +35,9 @@ const endpoint = async (
   req: NextApiRequest,
   session?: UserSession
 ): Promise<InternalResponse<TopLevelData | undefined>> => {
+
+  // start timing
+  const start = Date.now();
   // require login
   if (!session?.isLoggedIn || !session.user) {
     return {
@@ -52,6 +55,10 @@ const endpoint = async (
     dummyWatchlist(),
     dummyNotifications(),
   ]);
+
+  // end timing
+  const end = Date.now();
+  console.log(`Debug: top level endpoint took ${end - start} ms`);
 
   return {
     data: {

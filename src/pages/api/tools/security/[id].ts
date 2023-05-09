@@ -6,7 +6,7 @@ import { InternalResponse, constructHandler } from "../../../../helpers/errors";
 
 import type { UserSession } from "../../../../helpers/userHelper";
 
-type SecurityResponse = {
+export type SecurityResponse = {
   doesSecurityExist: boolean;
 };
 

@@ -7,7 +7,7 @@ import {
   BadRequestError,
 } from "./errors";
 import { getPortfolioById } from "./portfolioHelper";
-import type { PortfolioWithPositions } from "./portfolioHelper";
+import { PortfolioJoined, wrapReturns } from "./portfolioHelper";
 
 // Don't send hashed password back to user
 export type SanitizedUser = {
