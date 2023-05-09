@@ -1,9 +1,53 @@
 import axios from "axios";
-import { PrismaClient, StockEODData } from "@prisma/client";
+import { PrismaClient, StockEODData, KnownHolidays } from "@prisma/client";
+import prisma from "./dbHelper";
 
 import moment from "moment-timezone";
 
 export const { MARKETSTACK_API_KEY } = process.env;
+
+// only 5 requests allowed per second. wait and release functions
+let lastQueryTimes: number[] = [];
+
+const logQuery = () => {
+  // add date.now
+  lastQueryTimes.push(Date.now());
+  // if any older than 20 seconds ago, remove
+  const twentySecondsAgo = Date.now() - 20000;
+  lastQueryTimes = lastQueryTimes.filter((t) => t > twentySecondsAgo);
+};
+
+const waitIfRequired = async () => {
+  // count how many in last second
+  const lastSecond = Date.now() - 1000;
+
+  const lastSecondCount = lastQueryTimes.filter((t) => t > lastSecond).length;
+
+  if (lastSecondCount >= 2) {
+    // wait 2 seconds
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  }
+};
+// only allow 10,000 entries at a time
+// format: YYYY-MM-DD-security
+type key = `${string}-${string}-${string}-${string}`;
+const localPriceCache = new Map<string, number>();
+
+function checkLocalCache(symbol: string, date: string) {
+  const key = `${symbol}-${date}`;
+  return localPriceCache.get(key);
+}
+
+function setLocalCache(symbol: string, date: string, price: number) {
+  const key = `${symbol}-${date}`;
+  // check if already there
+  if (localPriceCache.has(key)) return;
+  localPriceCache.set(key, price);
+  // check length, remove oldest
+  if (localPriceCache.size > 10000) {
+    localPriceCache.delete(localPriceCache.keys().next().value);
+  }
+}
 
 export type MarketstackResponse<T> = {
   pagination: {
@@ -35,13 +79,17 @@ export const getEODUncachedFromMarketstack = async (
   symbol: string,
   date: string
 ): Promise<MarketstackEod> => {
+  console.log("Marketstack getEODUncachedFromMarketstack");
+
   // check if we're running in a browser
   if (typeof window !== "undefined") {
     throw new Error("Cannot call this function from the browser");
   }
+  await waitIfRequired();
   const { data, headers, status } = await axios.get(
-    `http://api.marketstack.com/v1/eod?access_key=${MARKETSTACK_API_KEY}&symbols=${symbol}&date_from=${date}&date_to=${date}`
+    `https://api.marketstack.com/v1/eod?access_key=${MARKETSTACK_API_KEY}&symbols=${symbol}&date_from=${date}&date_to=${date}`
   );
+  logQuery();
 
   const { data: eodData } = data as MarketstackResponse<MarketstackEod[]>;
 
@@ -49,6 +97,13 @@ export const getEODUncachedFromMarketstack = async (
     // check if we're being rate limited
     if (status === 429) {
       console.log("Rate limited!");
+    } else {
+      // add to known holidays
+      await prisma.knownHolidays.create({
+        data: {
+          date: new Date(date),
+        },
+      });
     }
     throw new Error(
       "No data found for day " + date + " -- got status " + status
@@ -67,23 +122,87 @@ export const getEODUncachedByDateRange = async (
   if (typeof window !== "undefined") {
     throw new Error("Cannot call this function from the browser");
   }
+
+  // split calls into 2 year entities and then merge
+  const dateFromMoment = moment(dateFrom);
+  const dateToMoment = moment(dateTo);
+  const diff = dateToMoment.diff(dateFromMoment, "years");
+  if (diff > 2) {
+    // split into 2 calls
+    const dateFrom1 = dateFromMoment.format("YYYY-MM-DD");
+    const dateTo1 = dateFromMoment.add(2, "years").format("YYYY-MM-DD");
+    const dateFrom2 = dateFromMoment.add(1, "days").format("YYYY-MM-DD");
+    const dateTo2 = dateToMoment.format("YYYY-MM-DD");
+    console.log("SPLIT" + symbol);
+    try {
+      const eodData1 = await getEODUncachedByDateRange(
+        symbol,
+        dateFrom1,
+        dateTo1
+      );
+      const eodData2 = await getEODUncachedByDateRange(
+        symbol,
+        dateFrom2,
+        dateTo2
+      );
+
+      return [...eodData1, ...eodData2];
+    } catch (e) {
+      console.error(e);
+      return [];
+    }
+  }
+  await waitIfRequired();
   const { data } = await axios.get(
-    `http://api.marketstack.com/v1/eod?access_key=${MARKETSTACK_API_KEY}&symbols=${symbol}&date_from=${dateFrom}&date_to=${dateTo}`
+    `https://api.marketstack.com/v1/eod?access_key=${MARKETSTACK_API_KEY}&symbols=${symbol}&date_from=${dateFrom}&date_to=${dateTo}&limit=1000`
   );
+  logQuery();
 
-  const { data: eodData } = data as MarketstackResponse<MarketstackEod[]>;
+  try {
+    const { data: eodData } = data as MarketstackResponse<MarketstackEod[]>;
 
-  if (!eodData.length) throw new Error("No data found");
+    if (!eodData.length) {
+      return [];
+    }
 
-  return eodData;
+    // pagination
+    const { pagination } = data as MarketstackResponse<MarketstackEod[]>;
+
+    if (pagination.total > pagination.count) {
+      console.error("Pagination not implemented yet");
+    }
+
+    // find all gaps between days
+    // const gaps = eodData.reduce((acc, curr, index) => {
+    //   if (index === 0) return acc;
+    //   const currDate = moment(curr.date);
+    //   const prevDate = moment(eodData[index - 1].date);
+    //   const diff = currDate.diff(prevDate, "days");
+    //   if (diff > 1) {
+    //     acc.push({
+    //       dateFrom: prevDate.format("YYYY-MM-DD"),
+    //       dateTo: currDate.format("YYYY-MM-DD"),
+    //     });
+    //   }
+    //   return acc;
+    // }, [] as { dateFrom: string; dateTo: string }[]);
+
+    return eodData;
+  } catch (e: any) {
+    // check 429
+    // check if type has response status
+    if (e.response && e.response.status === 429) {
+      console.log("Rate limited!" + e.response.status);
+      throw e;
+    }
+    throw e;
+  }
 };
 
 export const doesDatabaseHaveEODDataByDay = async (
   symbol: string,
   date: string
 ): Promise<StockEODData | null> => {
-  const prisma = new PrismaClient();
-
   // symbol = symbol and date = date, keep in mind date in the db is a DateTime
   const eodData = await prisma.stockEODData.findFirst({
     where: {
@@ -91,14 +210,105 @@ export const doesDatabaseHaveEODDataByDay = async (
       date: new Date(date),
     },
   });
-
   return eodData;
+};
+
+export const persistBulkEODDataByDay = async (
+  eodData: MarketstackEod[]
+): Promise<void> => {
+  // get each unique security in eodData
+  const securities = eodData.reduce((acc, curr) => {
+    if (!acc.includes(curr.symbol)) {
+      acc.push(curr.symbol);
+    }
+    return acc;
+  }, [] as string[]);
+
+  // get earliest and latest date in eodData
+  const dates = eodData.reduce(
+    (acc, curr) => {
+      const currDate = moment(curr.date);
+      if (currDate.isBefore(acc.earliest)) {
+        acc.earliest = currDate;
+      }
+      if (currDate.isAfter(acc.latest)) {
+        acc.latest = currDate;
+      }
+      return acc;
+    },
+    {
+      earliest: moment(eodData[0].date),
+      latest: moment(eodData[0].date),
+    } as { earliest: moment.Moment; latest: moment.Moment }
+  );
+
+  // get all the known data between earliest and latest for known securities
+  const knownData = await prisma.stockEODData.findMany({
+    where: {
+      symbol: {
+        in: securities,
+      },
+      date: {
+        gte: dates.earliest.toDate(),
+        lte: dates.latest.toDate(),
+      },
+    },
+  });
+
+  // filter out known data from eodData
+  const unknownData = eodData.filter((eod) => {
+    const found = knownData.find(
+      (known) =>
+        known.symbol === eod.symbol &&
+        // ignore time zone
+        moment(known.date).format("YYYY-MM-DD") ===
+          moment(eod.date).format("YYYY-MM-DD")
+    );
+    return !found;
+  });
+
+  // persist unknown data
+
+  console.log("Persisting", unknownData.length, "entries");
+
+  try {
+    /* StockEODData without id */
+    type Data = Omit<StockEODData, "id">;
+    const data: Data[] = unknownData.map((eod) => ({
+      symbol: eod.symbol,
+      date: new Date(eod.date),
+      open: eod.open,
+      high: eod.high,
+      low: eod?.low || 0,
+      close: eod.close,
+      volume: eod?.volume || 0,
+      adj_high: eod?.adj_high || 0,
+      adj_low: eod?.adj_low || 0,
+      adj_close: eod?.adj_close || 0,
+      adj_open: eod?.adj_open || 0,
+      adj_volume: eod?.adj_volume || 0,
+      exchange: eod?.exchange || "UNKNOWN",
+      dividend: 0,
+      split_factor: 0,
+    }));
+    const persistedEodData = await prisma.stockEODData.createMany({
+      data,
+    });
+  } catch (e) {
+    console.error(e);
+  }
+
+  // add all the close prices to the local cache
+  unknownData.forEach((eod) => {
+    setLocalCache(eod.symbol, moment(eod.date).format("YYYY-MM-DD"), eod.close);
+  });
+
+  return;
 };
 
 export const persistEODDataByDay = async (
   eodData: MarketstackEod
 ): Promise<StockEODData> => {
-  console.log("Persisting", eodData?.symbol, "on", eodData?.date);
   // check if the date and security is already persisted in db
   const existingEodData = await doesDatabaseHaveEODDataByDay(
     eodData.symbol,
@@ -107,7 +317,7 @@ export const persistEODDataByDay = async (
 
   if (existingEodData) return existingEodData;
 
-  const prisma = new PrismaClient();
+  console.log("Persisting", eodData?.symbol, "on", eodData?.date);
 
   const persistedEodData = await prisma.stockEODData.create({
     data: {
@@ -132,23 +342,71 @@ export const persistEODDataByDay = async (
   return persistedEodData;
 };
 
+export const getAllKnownPricesBetweenDateRange = async (
+  symbol: string,
+  dateFrom: string,
+  dateTo: string
+): Promise<StockEODData[]> => {
+  // check if we're running in a browser
+  if (typeof window !== "undefined") {
+    throw new Error("Cannot call this function from the browser");
+  }
+
+  const eodData = await prisma.stockEODData.findMany({
+    where: {
+      symbol,
+      date: {
+        gte: new Date(dateFrom),
+        lte: new Date(dateTo),
+      },
+    },
+  });
+
+  // put all close prices in memory
+  eodData.forEach((eod) => {
+    setLocalCache(eod.symbol, moment(eod.date).format("YYYY-MM-DD"), eod.close);
+  });
+
+  return eodData;
+};
+
 export const getStockPriceOnDate = async (
   symbol: string,
   date: string,
   iterations?: number
 ): Promise<number> => {
+  const lcl = checkLocalCache(symbol, date);
+  if (lcl) return lcl;
+
   // if it's a weekend go back one day
   const dayOfWeek = moment(date).day();
 
   if (dayOfWeek === 0 || dayOfWeek === 6) {
-    return getStockPriceOnDate(
+    const res = await getStockPriceOnDate(
       symbol,
       moment(date).subtract(1, "days").format("YYYY-MM-DD"),
       iterations ? iterations + 1 : 0
     );
+    setLocalCache(symbol, date, res);
+    return res;
   }
 
-  const prisma = new PrismaClient();
+  // check if it's on a known holiday
+  const knownHoliday = await prisma.knownHolidays.findFirst({
+    where: {
+      date: new Date(date),
+    },
+  });
+
+  if (knownHoliday) {
+    const res = await getStockPriceOnDate(
+      symbol,
+      moment(date).subtract(1, "days").format("YYYY-MM-DD"),
+      iterations ? iterations + 1 : 0
+    );
+    setLocalCache(symbol, date, res);
+    return res;
+  }
 
   let eodData = await prisma.stockEODData.findFirst({
     where: {
@@ -157,32 +415,44 @@ export const getStockPriceOnDate = async (
     },
   });
 
-  if (eodData) return eodData.close;
-  // persistEODDataForPastNYears
-  // get and persist data for that day
-  let temp = await getEODUncachedFromMarketstack(symbol, date);
-  eodData = await persistEODDataByDay(temp);
+  try {
+    let temp = await getEODUncachedFromMarketstack(symbol, date);
+    eodData = await persistEODDataByDay(temp);
+    // holidays
+    if (!eodData) {
+      if (iterations && iterations > 5)
+        throw new Error("Can't find that security (" + symbol + ")");
+      const res = await getStockPriceOnDate(
+        symbol,
+        moment(date).subtract(1, "days").format("YYYY-MM-DD"),
+        iterations ? iterations + 1 : 0
+      );
+      setLocalCache(symbol, date, res);
+      return res;
+    }
+    if (eodData) return eodData.close;
 
-  // holidays
-  if (!eodData) {
+    return 0;
+  } catch (e) {
+    // maybe a holiday
     if (iterations && iterations > 5)
       throw new Error("Can't find that security (" + symbol + ")");
-    return getStockPriceOnDate(
+    const res = await getStockPriceOnDate(
       symbol,
       moment(date).subtract(1, "days").format("YYYY-MM-DD"),
       iterations ? iterations + 1 : 0
     );
+    setLocalCache(symbol, date, res);
+    return res;
   }
-
-  return eodData.close;
+  // persistEODDataForPastNYears
+  // get and persist data for that day
 };
 
 export const persistEODDataForPastNYears = async (
   symbol: string,
   years: number
-): Promise<StockEODData[]> => {
-  const prisma = new PrismaClient();
-
+): Promise<void> => {
   const today = new Date();
 
   const dateTo = today.toISOString().split("T")[0];
@@ -201,19 +471,20 @@ export const persistEODDataForPastNYears = async (
   if (!eodData.length)
     throw new Error("Can't find that security (" + symbol + ")");
 
-  const persistedEodData = await Promise.all(
-    eodData.map(async (eod) => {
-      const persistedEod = await persistEODDataByDay(eod);
-      return persistedEod;
-    })
-  );
+  // const persistedEodData = await Promise.all(
+  //   eodData.map(async (eod) => {
+  //     const persistedEod = await persistEODDataByDay(eod);
+  //     return persistedEod;
+  //   })
+  // );
 
-  return persistedEodData;
+  // persist bulk persistBulkEODDataByDay
+  const persistedEodData = await persistBulkEODDataByDay(eodData);
+
+  return;
 };
 
 export const doesSecurityExist = async (symbol: string): Promise<boolean> => {
-  const prisma = new PrismaClient();
-
   // see if we have any EOD data for it?
   const eodData = await prisma.stockEODData.findMany({
     where: {
