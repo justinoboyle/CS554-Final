@@ -9,32 +9,44 @@ import { toast } from "react-toastify";
 
 import styles from "@/styles/stock.module.css";
 import useTopLevelUserData from "@/hooks/useTopLevelUserData";
-import { useSecurity } from "@/hooks/fetchers/useSecurity";
-import { useStock } from "@/hooks/fetchers/useStock";
+import { doesSecurityExist } from "@/hooks/fetchers/useSecurity";
+import { fetchStock } from "@/hooks/fetchers/useStock";
 
-import { convertVolumeToShorthand, formatToDollar, calculateCostOfShares, checkValidAmount, createStockPosition } from "@/helpers/stockHelper";
+import { convertVolumeToShorthand, formatToDollar, calculateCostOfShares, checkValidAmount } from "@/helpers/stockHelper";
 import { StockEODData } from "@prisma/client";
 
 function Stock() {
   const [amount, setAmount] = useState<string>("");
   const [disabled, setDisabled] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<any>();
   const router = useRouter();
   const [ticker, setTicker] = useState<string | undefined>(undefined);
   const { data: topLevelData, error: topLevelError, mutate, helpers } = useTopLevelUserData();
-  const { doesSecurityExist, error: securityError, loading: securityLoading, fn: fetchSecurity } = useSecurity();
-  const { data: stockData, error: stockError, loading: stockLoading, fn: fetchStock } = useStock();
+  const [stockData, setStockData] = useState<any>(undefined);
 
   const portfolios = topLevelData?.portfolios || [];  
+  const stock = stockData?.data;
 
   useEffect(() => {
-    if (router.isReady) {
-      setTicker("" + router.query.ticker);
-      fetchSecurity("" + router.query.ticker);
-      fetchStock("" + router.query.ticker);
+    async function fetchData() {
+      try {
+        if (router.isReady) {
+          setTicker("" + router.query.ticker);
+          let securityExists = await doesSecurityExist("" + router.query.ticker);
+          if (!securityExists) {
+            setError("Security doesn't exist");
+            return;
+          } 
+          let data = await fetchStock("" + router.query.ticker);
+          setStockData(data);
+        }
+      } catch(e: any) {
+        setError(e);
+      }
     }
-  }, [router.isReady]);
+    fetchData();
+  }, [router.isReady, router.query.ticker]);
 
   function handleWatchOnClick(e: any) {
     e.preventDefault();
@@ -43,17 +55,18 @@ function Stock() {
   async function handleFormSubmit(e: any) {
     e.preventDefault();
     setDisabled(true);
-    setIsLoading(true);
+    setLoading(true);
     let amount = parseFloat(e.target.amount.value);
     let portfolioId = e.target.portfolio.value;
+    console.log(amount, portfolioId);
     try {
-      checkValidAmount(amount, stock?.volume as number);
-      createStockPosition(stock?.symbol as string, amount, portfolioId).then((response) => console.log(response));
-    } catch(e) {
-      console.log(e);
+      checkValidAmount(amount, stock.volume);
+      helpers.addPositionToPortfolio(portfolioId, stock.symbol, amount, new Date().toString());
+      toast.success("Successfully added to portfolio");
+    } catch(e: any) {
+      toast.error(e.message);
     }
-    toast.success("Successfully added to portfolio");
-    setIsLoading(false);
+    setLoading(false);
     setDisabled(false);
   }
 
@@ -66,13 +79,10 @@ function Stock() {
     }
   }
 
-  if (securityLoading || stockLoading) return <Loading />;
-  console.log(doesSecurityExist);
-  if (doesSecurityExist === false) return <Error message="Security does not exist" />
-  if (securityError) return <Error message={securityError} />
-  if (stockError) return <Error message={stockError} />
-
-  const stock = stockData?.data as StockEODData;
+  console.log(stockData);
+  console.log(topLevelData);
+  if (!stockData || !topLevelData) return <Loading />;
+  if (error) return <Error message={error.message} />
 
   /* 
   "open": 129.8,
@@ -97,21 +107,21 @@ function Stock() {
       <Navbar activePage="" />
       <div className={styles.main_wrapper}>
         <div className={styles.stock_wrapper}>
-          <h2>{stock?.symbol}</h2>
-          <p>Last updated: <span className={styles.italic}>{new Date(stock?.date as Date).toString()}</span></p>
+          <h2>{stock.symbol}</h2>
+          <p>Last updated: <span className={styles.italic}>{new Date(stock.date).toString()}</span></p>
           <table className={styles.table}>
             <tbody>
               <tr className={styles.table_row}>
                 <th className={styles.table_header}>High:</th>
-                <td className={styles.table_value}>{formatToDollar(stock?.high as number)}</td>
+                <td className={styles.table_value}>{formatToDollar(stock.high)}</td>
               </tr>
               <tr className={styles.table_row}>
                 <th className={styles.table_header}>Low:</th>
-                <td className={styles.table_value}>{formatToDollar(stock?.low as number)}</td>
+                <td className={styles.table_value}>{formatToDollar(stock.low)}</td>
               </tr>
               <tr className={styles.table_row}>
                 <th className={styles.table_header}>Volume:</th>
-                <td className={styles.table_value}>{convertVolumeToShorthand(stock?.volume as number)}</td>
+                <td className={styles.table_value}>{convertVolumeToShorthand(stock.volume)}</td>
               </tr>
             </tbody>
           </table>
@@ -126,7 +136,7 @@ function Stock() {
             </button>
           </div>
             <form className={styles.form} onSubmit={handleFormSubmit}>
-            <h2 className={styles.form_title}>Buy {stock?.symbol as string}</h2>
+            <h2 className={styles.form_title}>Buy {stock.symbol as string}</h2>
               <div className={styles.form_group}>
                 <label className={styles.form_label}>Shares</label>
                 <input
@@ -134,7 +144,7 @@ function Stock() {
                   name="amount"
                   placeholder="0"
                   onChange={handleAmountOnChange}
-                  disabled={disabled || isLoading}
+                  disabled={disabled || loading}
                 />
               </div>
               <div className={styles.form_group}>
@@ -158,19 +168,19 @@ function Stock() {
               </div>
               <div className={styles.form_group}>
                 <label className={styles.form_label}>Open price</label>
-                <span>{formatToDollar(stock?.open as number)}</span>
+                <span>{formatToDollar(stock.open)}</span>
               </div>
               <div className={styles.form_group}>
                 <label className={styles.form_label}>Close price</label>
-                <span>{formatToDollar(stock?.close as number)}</span>
+                <span>{formatToDollar(stock.close)}</span>
               </div>
               <hr className={styles.horizontal_line} />
               <div className={styles.form_group}>
                 <label className={`${styles.form_label} ${styles.bold}`}>Cost (on close)</label>
-                <span>{calculateCostOfShares(parseFloat(amount), stock?.close as number)}</span>
+                <span>{calculateCostOfShares(parseFloat(amount), stock.close)}</span>
               </div>
               <div className={styles.button_wrapper}>
-                {portfolios.length ? <button type='submit' className={styles.buy_button}>Buy {stock?.symbol as string}</button> : <button type='button' className={styles.blank_button}>Create a portfolio first!</button>}
+                {portfolios.length ? <button type='submit' className={styles.buy_button}>Buy {stock.symbol}</button> : <button type='button' className={styles.blank_button}>Create a portfolio first!</button>}
               </div>
             </form>
         </div>
