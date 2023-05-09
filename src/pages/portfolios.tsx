@@ -1,12 +1,9 @@
 import Head from "next/head";
-import { useState, useEffect } from "react";
-
-import { toast } from "react-toastify";
+import { useState } from "react";
 
 import { Navbar } from "../components/Navbar";
 
 import styles from "@/styles/portfolios.module.css";
-import { Portfolio } from "@prisma/client";
 import useTopLevelUserData from "../hooks/useTopLevelUserData";
 
 function Portfolios() {
