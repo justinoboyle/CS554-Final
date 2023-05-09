@@ -14,7 +14,7 @@ export default function Watchlist() {
       <main>
         <Navbar activePage="watchlist" />
         <div className={styles.body}>
-          <h1 className={styles.title}>Stocks of interest (mock data)</h1>
+          <h1 className={styles.title}>Stocks of interest</h1>
           <form className={styles.form}>
             <label className={styles.form_group}>Add stock to watchlist</label>
             <br/>
