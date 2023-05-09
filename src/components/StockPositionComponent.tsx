@@ -1,8 +1,5 @@
-import {
-  getStockPositionById,
-  calculateStockPositionReturns,
-} from "../helpers/stockPositionHelper";
 import { useState, useEffect } from "react";
+
 import { StockPosition } from "@prisma/client";
 
 type Props = {
