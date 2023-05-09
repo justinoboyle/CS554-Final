@@ -118,6 +118,10 @@ export const getEODUncachedByDateRange = async (
   dateFrom: string,
   dateTo: string
 ): Promise<MarketstackEod[]> => {
+  // if invalid symbol throw error
+  if (!symbol || (symbol?.trim()?.length || 0) < 1) {
+    throw new Error("Invalid symbol");
+  }
   // check if we're running in a browser
   if (typeof window !== "undefined") {
     throw new Error("Cannot call this function from the browser");

@@ -11,12 +11,25 @@ import styles from "@/styles/stock.module.css";
 import { useStock } from "@/hooks/useStock";
 import useTopLevelUserData from "@/hooks/useTopLevelUserData";
 
-import { convertVolumeToShorthand, formatToDollar, calculateCostOfShares, checkValidAmount, createStockPosition } from "@/helpers/stockHelper";
+import {
+  convertVolumeToShorthand,
+  formatToDollar,
+  calculateCostOfShares,
+  checkValidAmount,
+  createStockPosition,
+} from "@/helpers/stockHelper";
 
 function Stock() {
-  const { data: topLevelData, error: topLevelError, mutate, helpers } = useTopLevelUserData();
+  const {
+    data: topLevelData,
+    error: topLevelError,
+    mutate,
+    helpers,
+  } = useTopLevelUserData();
   const router = useRouter();
-  const { data: stockData, error: stockError } = useStock("" + router?.query?.ticker);
+  const { data: stockData, error: stockError } = useStock(
+    "" + router?.query?.ticker
+  );
   const [amount, setAmount] = useState<string>("");
   const [disabled, setDisabled] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -35,8 +48,10 @@ function Stock() {
     let portfolioId = e.target.portfolio.value;
     try {
       checkValidAmount(amount, stock.volume);
-      createStockPosition(stock.symbol, amount, portfolioId).then((response) => console.log(response));
-    } catch(e) {
+      createStockPosition(stock.symbol, amount, portfolioId).then((response) =>
+        console.log(response)
+      );
+    } catch (e) {
       console.log(e);
     }
     toast.success("Successfully added to portfolio");
@@ -53,8 +68,9 @@ function Stock() {
     }
   }
 
-  if (stockData.doesSecurityExist === false) return <Error message={"Stock ticker does not exist!"}/>
-  if (!stockData) return <Loading />
+  if (!stockData?.doesSecurityExist === false)
+    return <Error message={"Stock ticker does not exist!"} />;
+  if (!stockData) return <Loading />;
 
   console.log(stockData, stockError);
   const stock = stockData?.data;
@@ -78,78 +94,112 @@ function Stock() {
 
   return (
     <div>
-      <Navbar activePage=""/>
+      <Navbar activePage="" />
       <div className={styles.main_wrapper}>
         <div className={styles.stock_wrapper}>
           <h2>{stock.symbol}</h2>
-          <p>Last updated: <span className={styles.italic}>{new Date(stock.date).toString()}</span></p>
+          <p>
+            Last updated:{" "}
+            <span className={styles.italic}>
+              {new Date(stock.date).toString()}
+            </span>
+          </p>
           <table className={styles.table}>
             <tbody>
               <tr className={styles.table_row}>
                 <th className={styles.table_header}>High:</th>
-                <td className={styles.table_value}>{formatToDollar(stock.high)}</td>
+                <td className={styles.table_value}>
+                  {formatToDollar(stock.high)}
+                </td>
               </tr>
               <tr className={styles.table_row}>
                 <th className={styles.table_header}>Low:</th>
-                <td className={styles.table_value}>{formatToDollar(stock.low)}</td>
+                <td className={styles.table_value}>
+                  {formatToDollar(stock.low)}
+                </td>
               </tr>
               <tr className={styles.table_row}>
                 <th className={styles.table_header}>Volume:</th>
-                <td className={styles.table_value}>{convertVolumeToShorthand(stock.volume)}</td>
+                <td className={styles.table_value}>
+                  {convertVolumeToShorthand(stock.volume)}
+                </td>
               </tr>
             </tbody>
           </table>
         </div>
         <div className={styles.form_wrapper}>
           <div className={styles.button_wrapper}>
-            <button className={styles.watch_button} onClick={handleWatchOnClick}>{'\u2606'} Watch</button>
+            <button
+              className={styles.watch_button}
+              onClick={handleWatchOnClick}
+            >
+              {"\u2606"} Watch
+            </button>
           </div>
-            <form className={styles.form} onSubmit={handleFormSubmit}>
+          <form className={styles.form} onSubmit={handleFormSubmit}>
             <h2 className={styles.form_title}>Buy {stock.symbol}</h2>
-              <div className={styles.form_group}>
-                <label className={styles.form_label}>Shares</label>
-                <input
-                  className={styles.form_input}
-                  name="amount"
-                  placeholder="0"
-                  onChange={handleAmountOnChange}
-                  disabled={disabled || isLoading}
-                />
-              </div>
-              <div className={styles.form_group}>
-                <label className={styles.form_label}>Portfolio</label>
-                {portfolios.length
-                ?
+            <div className={styles.form_group}>
+              <label className={styles.form_label}>Shares</label>
+              <input
+                className={styles.form_input}
+                name="amount"
+                placeholder="0"
+                onChange={handleAmountOnChange}
+                disabled={disabled || isLoading}
+              />
+            </div>
+            <div className={styles.form_group}>
+              <label className={styles.form_label}>Portfolio</label>
+              {portfolios.length ? (
                 <select name="portfolio">
-                  <option className={styles.first_option} value="">Select a portfolio</option>
+                  <option className={styles.first_option} value="">
+                    Select a portfolio
+                  </option>
                   {portfolios.map((portfolio) => {
-                    return <option value={portfolio.id} key={portfolio.id}>{portfolio.title}</option>
+                    return (
+                      <option value={portfolio.id} key={portfolio.id}>
+                        {portfolio.title}
+                      </option>
+                    );
                   })}
                 </select>
-                :
-                <span className={styles.italic}>No portfolios yet!</span>}
-              </div>
-              <div className={styles.form_group}>
-                <label className={styles.form_label}>Open price</label>
-                <span>{formatToDollar(stock.open)}</span>
-              </div>
-              <div className={styles.form_group}>
-                <label className={styles.form_label}>Close price</label>
-                <span>{formatToDollar(stock.close)}</span>
-              </div>
-              <hr className={styles.horizontal_line} />
-              <div className={styles.form_group}>
-                <label className={`${styles.form_label} ${styles.bold}`}>Cost (on close)</label>
-                <span>{calculateCostOfShares(parseFloat(amount), stock.close)}</span>
-              </div>
-              <div className={styles.button_wrapper}>
-                {portfolios.length ? <button type='submit' className={styles.buy_button}>Buy {stock.symbol}</button> : <button type='button' className={styles.blank_button}>Create a portfolio first!</button>}
-              </div>
-            </form>
+              ) : (
+                <span className={styles.italic}>No portfolios yet!</span>
+              )}
+            </div>
+            <div className={styles.form_group}>
+              <label className={styles.form_label}>Open price</label>
+              <span>{formatToDollar(stock.open)}</span>
+            </div>
+            <div className={styles.form_group}>
+              <label className={styles.form_label}>Close price</label>
+              <span>{formatToDollar(stock.close)}</span>
+            </div>
+            <hr className={styles.horizontal_line} />
+            <div className={styles.form_group}>
+              <label className={`${styles.form_label} ${styles.bold}`}>
+                Cost (on close)
+              </label>
+              <span>
+                {calculateCostOfShares(parseFloat(amount), stock.close)}
+              </span>
+            </div>
+            <div className={styles.button_wrapper}>
+              {portfolios.length ? (
+                <button type="submit" className={styles.buy_button}>
+                  Buy {stock.symbol}
+                </button>
+              ) : (
+                <button type="button" className={styles.blank_button}>
+                  Create a portfolio first!
+                </button>
+              )}
+            </div>
+          </form>
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export default Stock;
