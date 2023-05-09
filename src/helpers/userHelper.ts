@@ -7,7 +7,7 @@ import {
   BadRequestError,
 } from "./errors";
 import { getPortfolioById } from "./portfolioHelper";
-import type { PortfolioWithPositions } from "./portfolioHelper";
+import type { PortfolioJoined } from "./portfolioHelper";
 
 // Don't send hashed password back to user
 export type SanitizedUser = {
@@ -112,7 +112,7 @@ export const getUserById = async (
 
 export const getUserPortfolios = async (
   userId: string | undefined
-): Promise<PortfolioWithPositions[]> => {
+): Promise<PortfolioJoined[]> => {
   if (!userId) throw new BadRequestError("Invalid user ID");
 
   const prisma = new PrismaClient();

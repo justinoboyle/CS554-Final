@@ -1,6 +1,8 @@
 import axios from "axios";
 import { PrismaClient, StockEODData } from "@prisma/client";
 
+import moment from "moment-timezone";
+
 export const { MARKETSTACK_API_KEY } = process.env;
 
 export type MarketstackResponse<T> = {
@@ -29,7 +31,7 @@ export type MarketstackEod = {
   date: string;
 };
 
-export const getEODDataByDay = async (
+export const getEODUncachedFromMarketstack = async (
   symbol: string,
   date: string
 ): Promise<MarketstackEod> => {
@@ -39,12 +41,12 @@ export const getEODDataByDay = async (
 
   const { data: eodData } = data as MarketstackResponse<MarketstackEod[]>;
 
-  if (!eodData.length) throw new Error("No data found");
+  if (!eodData.length) throw new Error("No data found for day " + date);
 
   return eodData[0];
 };
 
-export const getEODDataByDateRange = async (
+export const getEODUncachedByDateRange = async (
   symbol: string,
   dateFrom: string,
   dateTo: string
@@ -80,6 +82,7 @@ export const doesDatabaseHaveEODDataByDay = async (
 export const persistEODDataByDay = async (
   eodData: MarketstackEod
 ): Promise<StockEODData> => {
+  console.log("Persisting", eodData?.symbol, "on", eodData?.date);
   // check if the date and security is already persisted in db
   const existingEodData = await doesDatabaseHaveEODDataByDay(
     eodData.symbol,
@@ -113,6 +116,51 @@ export const persistEODDataByDay = async (
   return persistedEodData;
 };
 
+export const getStockPriceOnDate = async (
+  symbol: string,
+  date: string,
+  iterations?: number
+): Promise<number> => {
+  // if it's a weekend go back one day
+  const dayOfWeek = moment(date).day();
+
+  if (dayOfWeek === 0 || dayOfWeek === 6) {
+    return getStockPriceOnDate(
+      symbol,
+      moment(date).subtract(1, "days").format("YYYY-MM-DD"),
+      iterations ? iterations + 1 : 0
+    );
+  }
+
+  const prisma = new PrismaClient();
+
+  let eodData = await prisma.stockEODData.findFirst({
+    where: {
+      symbol,
+      date: new Date(date),
+    },
+  });
+
+  if (eodData) return eodData.close;
+  // persistEODDataForPastNYears
+  // get and persist data for that day
+  let temp = await getEODUncachedFromMarketstack(symbol, date);
+  eodData = await persistEODDataByDay(temp);
+
+  // holidays
+  if (!eodData) {
+    if (iterations && iterations > 5)
+      throw new Error("Can't find that security (" + symbol + ")");
+    return getStockPriceOnDate(
+      symbol,
+      moment(date).subtract(1, "days").format("YYYY-MM-DD"),
+      iterations ? iterations + 1 : 0
+    );
+  }
+
+  return eodData.close;
+};
+
 export const persistEODDataForPastNYears = async (
   symbol: string,
   years: number
@@ -131,10 +179,11 @@ export const persistEODDataForPastNYears = async (
     .toISOString()
     .split("T")[0];
 
-  const eodData = await getEODDataByDateRange(symbol, dateFrom, dateTo);
+  const eodData = await getEODUncachedByDateRange(symbol, dateFrom, dateTo);
 
   // if invalid, stop and throw error immediately
-  if (!eodData.length) throw new Error("Can't find that security");
+  if (!eodData.length)
+    throw new Error("Can't find that security (" + symbol + ")");
 
   const persistedEodData = await Promise.all(
     eodData.map(async (eod) => {
@@ -168,9 +217,9 @@ export const doesSecurityExist = async (symbol: string): Promise<boolean> => {
 
   if (trackedPositions.length) return true;
 
-  // if not, try to get data for it from marketstack for past year
+  // if not, try to get data for it from marketstack for past 10 years
   try {
-    await persistEODDataForPastNYears(symbol, 1);
+    await persistEODDataForPastNYears(symbol, 10);
     return true;
   } catch (error) {
     return false;

@@ -9,7 +9,7 @@ import type { UserSession } from "../../../helpers/userHelper";
 import { getPortfoliosByUser } from "../../../helpers/portfolioHelper";
 // import { createPortfolio } from "../../../helpers/portfolioHelper";
 
-import type { PortfolioWithPositions } from "../../../helpers/portfolioHelper";
+import type { PortfolioJoined } from "../../../helpers/portfolioHelper";
 
 // TODO update
 export type Watchlist = {};
@@ -26,7 +26,7 @@ async function dummyNotifications(): Promise<Notification[]> {
 /* The home page/dashboard will have an overview of all of the user’s subscribed stocks and invested portfolios, as well as a notification feed (described below).
  */
 export type TopLevelData = {
-  portfolios: PortfolioWithPositions[];
+  portfolios: PortfolioJoined[];
   watchlist: Watchlist;
   notifications: Notification[];
   user: SanitizedUser;

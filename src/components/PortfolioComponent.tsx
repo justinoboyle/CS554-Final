@@ -1,50 +1,35 @@
-import { PortfolioWithPositions, calculatePortfolioReturns } from '../helpers/portfolioHelper'
-import { useState, useEffect } from 'react';
-
+import { PortfolioJoined } from "../helpers/portfolioHelper";
+import { useState, useEffect } from "react";
 
 type Props = {
-    id: string,
-    portfolioObj: PortfolioWithPositions
-}
+  id: string;
+  portfolioObj: PortfolioJoined;
+};
 
 type PortfolioReturns = {
-    asAmount: number,
-    asPercentage: number
-}
+  asAmount: number;
+  asPercentage: number;
+};
 
 // takes portfolio id as key from props
 export const PortfolioComponent = (props: Props) => {
-    const portfolioData = props.portfolioObj;
-    const [returnData, setReturnData] = useState<PortfolioReturns | undefined>(undefined);
-    const [loading, setLoading] = useState(true);
+  const portfolioData = props.portfolioObj;
 
-    useEffect(() => {
-        async function fetchData() {
-            try {
-                setLoading(true);
-                const returns = await calculatePortfolioReturns(portfolioData);
-                setReturnData(returns)
-                setLoading(false);
+  if (!portfolioData) return <p>Loading...</p>;
 
-            } catch (e) {
-                console.log(e);
-                setLoading(false);
-            }
-        };
-        fetchData();
-    }, [portfolioData]);
+  const returns = portfolioData?.returns?.totalPercentChange;
 
-    if (loading) return (<p>Loading Portfolio Data...</p>);
-    if (!portfolioData || !returnData) return (<p>Error: Failed to fetch Portfolio</p>)
+  const formattedPercent =
+    (returns > 0 ? "+" : "") + (returns * 100).toFixed(2) + "%";
 
-    return (
-        <div id={portfolioData.id}>
-            <h2 id='portfolio-header'>
-                {portfolioData ? portfolioData.title : "Unknown Portfolio Title"}
-            </h2>
-            <div>
-                Portfolio Returns: {returnData.asAmount} ({returnData.asAmount ? returnData.asPercentage : "0%"})
-            </div>
-        </div>
-    )
+  return (
+    <div id={portfolioData.id}>
+      <h2 id="portfolio-header">
+        {portfolioData ? portfolioData.title : "Unknown Portfolio Title"}
+      </h2>
+      <div>
+        {formattedPercent} with {portfolioData?.positions?.length} positions
+      </div>
+    </div>
+  );
 };

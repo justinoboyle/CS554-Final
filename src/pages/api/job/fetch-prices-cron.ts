@@ -3,7 +3,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import {
-  getEODDataByDateRange,
+  getEODUncachedByDateRange,
   persistEODDataByDay,
 } from "../../../helpers/marketstackHelper";
 
@@ -153,7 +153,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     await Promise.all(
       entries.map(async (entry) => {
         const { ticker, startDate, endDate } = entry;
-        const data = await getEODDataByDateRange(
+        const data = await getEODUncachedByDateRange(
           ticker,
           startDate.format("YYYY-MM-DD"),
           endDate.format("YYYY-MM-DD")

@@ -1,7 +1,7 @@
 import type { ExternalResponse } from "../helpers/errors";
 import type { TopLevelData } from "../pages/api/pages/top-level";
 
-import type { PortfolioWithPositions } from "../helpers/portfolioHelper";
+import type { PortfolioJoined } from "../helpers/portfolioHelper";
 
 import { toast } from "react-toastify";
 
@@ -10,6 +10,12 @@ import useSWR from "swr";
 export type Helpers = {
   createPortfolio: (title: string) => Promise<void>;
   deletePortfolio: (portfolioId: string) => Promise<void>;
+  addPositionToPortfolio: (
+    portfolioId: string,
+    ticker: string,
+    shares: number,
+    dayPurchased: string
+  ) => Promise<any>;
 };
 
 export type HomeHook = {
@@ -39,6 +45,7 @@ export default function useHomePage(): HomeHook {
           homeData?.data?.portfolios?.filter((p) => p.id !== portfolioId) || [],
       } as TopLevelData,
     } as ExternalResponse<TopLevelData>;
+
     const response = await fetch("/api/portfolio/delete", {
       method: "DELETE",
       headers: {
@@ -72,7 +79,7 @@ export default function useHomePage(): HomeHook {
         userId: homeData?.data?.user?.id,
       }),
     });
-    const data: ExternalResponse<PortfolioWithPositions> =
+    const data: ExternalResponse<PortfolioJoined> =
       await response.json();
 
     if (data.error) {
@@ -85,6 +92,37 @@ export default function useHomePage(): HomeHook {
     toast.success("Created portfolio: " + data.data?.title);
   };
 
+  const addPositionToPortfolio = async (
+    portfolioId: string,
+    ticker: string,
+    shares: number,
+    dayPurchased: string
+  ) => {
+    const response = await fetch("/api/portfolio/add-position", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        portfolioId,
+        ticker,
+        shares,
+        dayPurchased,
+      }),
+    });
+    const data: ExternalResponse<PortfolioJoined> =
+      await response.json();
+
+    if (data.error) {
+      toast.error("Couldn't add position to portfolio: " + data.error);
+      mutate();
+      return;
+    }
+
+    mutate();
+    toast.success("Added " + shares + " shares of " + ticker);
+  };
+
   return {
     data: homeData?.data,
     isLoading,
@@ -93,6 +131,7 @@ export default function useHomePage(): HomeHook {
     helpers: {
       createPortfolio,
       deletePortfolio,
+      addPositionToPortfolio,
     },
   };
 }
