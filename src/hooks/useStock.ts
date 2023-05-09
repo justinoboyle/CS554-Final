@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import useSWR from "swr";
 
-export const useStock = (ticker: string | string[] | undefined) => {
+export const useStock = (ticker: string) => {
   const fetcher = async ([url, ticker]: [string, string]) => {
     const res = await fetch(`${url}/${ticker}`);
     const data = await res.json();
