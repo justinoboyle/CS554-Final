@@ -1,4 +1,10 @@
-import { PrismaClient, User, Portfolio, StockEODData } from "@prisma/client";
+import {
+  PrismaClient,
+  User,
+  Portfolio,
+  StockEODData,
+  Watchlist,
+} from "@prisma/client";
 import bcrypt from "bcrypt";
 import {
   AlreadyExistsError,
@@ -16,7 +22,7 @@ export type SanitizedUser = {
   email: string;
   name?: string;
   portfolioIds: string[];
-  watchlist: string[];
+  watchlist?: Watchlist;
 };
 
 export type UserSession = {
@@ -48,6 +54,7 @@ export const createUser = async (
       email,
       passwordBcrypt: passwordBcrypt,
       name,
+      watchlistId: null,
     },
   });
 
@@ -61,6 +68,9 @@ export const authorizeLogin = async (
   const user = await prisma.user.findUnique({
     where: {
       email,
+    },
+    include: {
+      watchlist: true,
     },
   });
 
@@ -81,23 +91,30 @@ export const authorizeLogin = async (
   return sanitizeUser(user);
 };
 
-export const sanitizeUser = (user: User): SanitizedUser => {
+type UserWithWatchlist = User & {
+  watchlist?: Watchlist | null;
+};
+
+export const sanitizeUser = (user: UserWithWatchlist): SanitizedUser => {
   return {
     id: user.id,
     email: user.email,
     name: user?.name || undefined,
     portfolioIds: user.portfolioIds,
-    watchlist: user.watchlist,
+    watchlist: user?.watchlist || undefined,
   };
 };
 
 export const getUserById = async (
   id: string
 ): Promise<SanitizedUser | null> => {
-
   const user = await prisma.user.findUnique({
     where: {
       id,
+    },
+    // with watchlist
+    include: {
+      watchlist: true,
     },
   });
 
@@ -139,17 +156,17 @@ export const getUserWatchlist = async (
 
   if (!user) throw new NotFoundError("User not found");
 
-  let watchlist = Promise.all(
-    user.watchlist.map(async (stockId) => {
-      let stock = await prisma.stockEODData.findUnique({
-        where: {
-          id: stockId,
-        },
-      });
-      if (!stock) throw new NotFoundError("Stock not found");
-      return stock;
-    })
-  );
+  // let watchlist = Promise.all(
+  //   (user?.watchlist || ([] as Watchlist)).map(async (stockId) => {
+  //     let stock = await prisma.stockEODData.findUnique({
+  //       where: {
+  //         id: stockId,
+  //       },
+  //     });
+  //     if (!stock) throw new NotFoundError("Stock not found");
+  //     return stock;
+  //   })
+  // );
 
-  return watchlist;
+  return [];
 };

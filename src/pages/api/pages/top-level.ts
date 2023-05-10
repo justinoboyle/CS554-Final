@@ -22,7 +22,7 @@ async function dummyNotifications(): Promise<Notification[]> {
  */
 export type TopLevelData = {
   portfolios: PortfolioJoined[];
-  watchlist: Watchlist;
+  watchlist?: Watchlist;
   notifications: Notification[];
   user: SanitizedUser;
 };
@@ -59,7 +59,7 @@ const endpoint = async (
   return {
     data: {
       portfolios,
-      watchlist,
+      watchlist: watchlist || undefined,
       notifications,
       user,
     },

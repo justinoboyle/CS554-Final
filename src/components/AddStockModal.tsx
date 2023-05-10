@@ -53,6 +53,16 @@ export default function AddStockModal(props: Props) {
     }
   };
 
+  const onChangeDatePicker = (e: React.FormEvent<HTMLInputElement>) => {
+    const value = e.currentTarget.value;
+    // make sure valid date
+    try {
+      const date = new Date(value);
+      // convert to iso string
+      date.toISOString()
+      setDatePurchased(date);
+    } catch (e) {}
+  };
   // on close, wipe all data
   const handleClose = () => {
     setSymbol("");
@@ -66,6 +76,14 @@ export default function AddStockModal(props: Props) {
     setLoading(true);
     try {
       setError("");
+      // only support portfolios in the past 5 years
+      const fiveYearsAgo = new Date();
+      fiveYearsAgo.setFullYear(fiveYearsAgo.getFullYear() - 5);
+      if (datePurchased < fiveYearsAgo) {
+        setError("Date purchased must be within the past 5 years");
+        setLoading(false);
+        return;
+      }
       // date can't be after today
       if (datePurchased > new Date()) {
         setError("Date purchased can't be in the future");
@@ -139,8 +157,13 @@ export default function AddStockModal(props: Props) {
             type="date"
             id="datePurchased"
             name="datePurchased"
-            value={datePurchased.toISOString().split("T")[0]}
-            onChange={(e) => setDatePurchased(new Date(e.target.value))}
+            // softly handle RangeError
+            // datePurchased.toISOString().split("T")[0]
+            value={
+              datePurchased.toISOString().split("T")[0] ||
+              new Date().toISOString().split("T")[0]
+            }
+            onChange={onChangeDatePicker}
             disabled={loading}
           />
         </div>
