@@ -3,7 +3,7 @@ import styles from "./Navbar.module.css";
 
 import useUser from "../hooks/useUser";
 
-type Pages = "home" | "about" | "portfolios" | "watchlist" | "alerts" | "";
+type Pages = "home" | "portfolios" | "watchlist" | "alerts" | "";
 
 // handle form submit
 const handleLogout = async (e: any) => {
