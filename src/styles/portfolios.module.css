@@ -25,7 +25,7 @@
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;  
+  margin-bottom: 20px;
 }
 
 .portfolio_information {
@@ -77,4 +77,95 @@
 
 .success {
   background-color: rgb(14, 121, 0);
+}
+
+.layout {
+  padding-top: 48px;
+  max-width: 1024px;
+  margin: auto;
+  display: flex;
+}
+
+.leftMajorSection {
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  padding: 0 16px;
+}
+
+.sideBarSection {
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: 200px;
+  /* padding: 0 16px; */
+  border: 1px solid lightgray;
+  border-radius: 5px;
+}
+.positions_header {
+  /* darker gray */
+  display: flex;
+}
+
+.positions_header h4 {
+  background-color: #333333;
+  /* border radius top left only */
+  border-top-left-radius: 5px;
+  padding: 10px;
+  /* fill width */
+  flex-grow: 1;
+}
+
+/* hard align to right */
+.addButton {
+  margin-left: auto;
+  background-color: rgb(0, 163, 0);
+  /* align vertically center */
+  display: flex;
+  align-items: center;
+
+  /* border radius top right only */
+  border-top-right-radius: 5px;
+
+  padding-right: 10px;
+  padding-left: 10px;
+
+  font-weight: bolder;
+
+  /* animate */
+  transition: 0.3s;
+}
+
+.addButton:hover {
+  background-color: rgb(0, 107, 0);
+  cursor: pointer;
+  user-select: none;
+}
+.individualStock {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px;
+  border-bottom: 1px solid lightgray;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.subheader {
+  /* small */
+  font-size: 0.8rem;
+}
+.positive {
+  /* better green */
+  color: rgb(0, 163, 0);
+}
+
+.negative {
+  /* better red */
+  color: rgb(255, 32, 32);
+}
+
+.neutral {
+  /* better gray */
+  color: rgb(136, 136, 136);
 }

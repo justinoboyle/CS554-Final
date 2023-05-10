@@ -20,6 +20,7 @@ type EarningsAt = {
     ticker: string;
     amount: number;
     pricePerShare: number;
+    boughtAtDay: string;
   }[];
   totalValue: number;
 };
@@ -165,6 +166,7 @@ export const wrapReturns = async (
             ticker: position.ticker,
             amount: position.amount,
             pricePerShare: position.price,
+            boughtAtDay: moment(position.createdAt).format("YYYY-MM-DD"),
           })),
           totalValue: positionsOnDayWithPrice
             ?.filter((a) => a.price != -1)
@@ -196,40 +198,63 @@ export const wrapReturns = async (
     // iterate through all positions, get the price of the position at the buy date
     // add all of those up
 
+    // ignore today
+    // const daysWithEarningsWithoutToday = daysWithEarnings.filter(
+    //   (day) => day.date !== today
+    // );
     const lastDayWithEarnings =
       daysWithEarnings?.length > 0
         ? daysWithEarnings[daysWithEarnings.length - 1]
         : null;
 
     // promise all
-    const amountWePutIn = await Promise.all(
-      positions.map(async (position) => {
-        // not added after last day wit earnings!!!
-        if (
-          lastDayWithEarnings &&
-          moment(position.createdAt).isAfter(lastDayWithEarnings.date)
-        )
-          return 0;
+    const amountWePutIn = (
+      await Promise.all(
+        positions.map(async (position) => {
+          // not added after last day wit earnings!!!
+          if (
+            lastDayWithEarnings &&
+            moment(position.createdAt).isAfter(lastDayWithEarnings.date)
+          )
+            return 0;
           // check cache
-        const cacheForPosition = cache.find(
-          (cache) => cache.positionId === position.id
-        );
-        // if we have a cache for position, check if we have the price
-        // for this day
-        if (cacheForPosition) {
-          const priceForDay = cacheForPosition.prices.find(
-            (price) =>
-              new Date(position.createdAt).getTime() ===
-              new Date(price.date).getTime()
+          const cacheForPosition = cache.find(
+            (cache) => cache.positionId === position.id
           );
-          // if we have the price, return it
-          if (priceForDay) {
-            return priceForDay.close * position.amount;
+          // if we have a cache for position, check if we have the price
+          // for this day
+          if (cacheForPosition) {
+            const priceForDay = cacheForPosition.prices.find(
+              (price) =>
+                new Date(position.createdAt).getTime() ===
+                new Date(price.date).getTime()
+            );
+            // if we have the price, return it
+            if (priceForDay) {
+              return priceForDay.close * position.amount;
+            } else {
+              // do we have one WITHIN TWO DAYS of it check (moment)
+              const priceForDay = cacheForPosition.prices
+                // sorted from newest to oldest
+                .sort(
+                  (a, b) =>
+                    new Date(b.date).getTime() - new Date(a.date).getTime()
+                )
+                .find((price) =>
+                  moment(position.createdAt).isSameOrBefore(price.date)
+                );
+              console.log(
+                "Using " + priceForDay?.date + " for " + position.createdAt
+              );
+              if (priceForDay) {
+                return priceForDay.close * position.amount;
+              }
+            }
           }
-        }
-        return -1;
-      })
-    );
+          return -1;
+        })
+      )
+    ).filter((a) => a !== -1);
 
     const reducedAmountWePutIn = amountWePutIn.reduce(
       (acc, amount) => acc + amount,
@@ -246,6 +271,8 @@ export const wrapReturns = async (
       reducedAmountWePutIn == 0
         ? 0
         : (totalValueToday - reducedAmountWePutIn) / reducedAmountWePutIn;
+
+    console.log(totalValueToday, reducedAmountWePutIn, totalPercentChange);
 
     return {
       ...portfolio,

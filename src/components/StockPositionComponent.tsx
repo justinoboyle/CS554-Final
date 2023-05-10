@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 
 import { StockPosition } from "@prisma/client";
 
+import styles from "./StockPositionComponent.module.css"
+
 type Props = {
   positionObj: StockPosition;
 };
@@ -17,8 +19,10 @@ export const StockPositionComponent = (props: Props) => {
   return (
     // just print out stocks in list for now
     <div id={positionObj.id}>
-      <h3>{positionObj.ticker}</h3>
-      <p>Amount Held: {positionObj.amount}</p>
+      <h3>
+        {positionObj.amount}x
+        {positionObj.ticker}
+      </h3>
     </div>
   );
 };
