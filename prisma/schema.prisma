@@ -24,7 +24,7 @@ model User {
   passwordBcrypt String?
   portfolioIds   String[]
   watchlist      Watchlist? @relation()
-  watchlistId    String     @unique @db.ObjectId
+  watchlistId    String?     @unique @db.ObjectId
   triggers       Trigger[]
   alerts         Alert[]
 }
