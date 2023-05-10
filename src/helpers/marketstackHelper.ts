@@ -7,6 +7,8 @@ const client = redis.createClient({
   url: process.env.REDIS_URL
 });
 client.connect().then(() => {});
+const flatten = require('flat');
+const unflatten = require('flat').unflatten;
 
 import moment from "moment-timezone";
 
@@ -34,36 +36,6 @@ const waitIfRequired = async () => {
     await new Promise((resolve) => setTimeout(resolve, 1000));
   }
 };
-// // only allow 10,000 entries at a time
-// // format: YYYY-MM-DD-security
-// type key = `${string}-${string}-${string}-${string}`;
-// const localPriceCache = new Map<string, number>();
-let keyConveyor: string[] = [];
-
-async function checkRedis(symbol: string, date: string) {
-  const key = `${symbol}-${date}`;
-  const redisOut = await client.get(key);
-  console.log(`Checked for ${key}, found ${redisOut}`)
-  if (redisOut !== null){
-    return Number(redisOut)
-  }
-  return redisOut;
-}
-
-async function setRedis(symbol: string, date: string, price: number) {
-  const key = `${symbol}-${date}`;
-  // check if already there
-  if (await client.exists(key)) return;
-  console.log(`Cache miss on ${key}`)
-  keyConveyor.push(key)
-  await client.set(key, price.toString());
-  // check length, remove oldest
-  console.log(`keyConveyor has ${keyConveyor.length} keys`)
-  if (keyConveyor.length > 10000) {
-    const oldestKey:string = keyConveyor.splice(0, 1)[0];
-    await client.del(oldestKey);
-  }
-}
 
 export type MarketstackResponse<T> = {
   pagination: {
@@ -318,11 +290,6 @@ export const persistBulkEODDataByDay = async (
     console.log("...when trying to insert " + data.length + " entries")
   }
 
-  // add all the close prices to the local cache
-  unknownData.forEach((eod) => {
-    setRedis(eod.symbol, moment(eod.date).format("YYYY-MM-DD"), eod.close);
-  });
-
   return;
 };
 
@@ -368,6 +335,12 @@ export const getAllKnownPricesBetweenDateRange = async (
   dateTo: string
 ): Promise<StockEODData[]> => {
   // check if we're running in a browser
+  const key = symbol + '//' + dateFrom + '//' + dateTo;
+  const inCache = await client.get(key);
+  if (inCache !== null){
+    const returnVal = unflatten(JSON.parse(inCache));
+    return returnVal;
+  }
   if (typeof window !== "undefined") {
     throw new Error("Cannot call this function from the browser");
   }
@@ -382,91 +355,11 @@ export const getAllKnownPricesBetweenDateRange = async (
     },
   });
 
-  // put all close prices in memory
-  eodData.forEach((eod) => {
-    setRedis(eod.symbol, moment(eod.date).format("YYYY-MM-DD"), eod.close);
-  });
+  if (!(await client.exists(key))){
+    await client.set(key, JSON.stringify(flatten(eodData)));
+  }
 
   return eodData;
-};
-
-export const getStockPriceOnDate = async (
-  symbol: string,
-  date: string,
-  iterations?: number
-): Promise<number> => {
-  const lcl = await checkRedis(symbol, date);
-  if (lcl) return lcl;
-
-  // if it's a weekend go back one day
-  const dayOfWeek = moment(date).day();
-
-  if (dayOfWeek === 0 || dayOfWeek === 6) {
-    const res = await getStockPriceOnDate(
-      symbol,
-      moment(date).subtract(1, "days").format("YYYY-MM-DD"),
-      iterations ? iterations + 1 : 0
-    );
-    setRedis(symbol, date, res);
-    return res;
-  }
-
-  // check if it's on a known holiday
-  const knownHoliday = await prisma.knownHolidays.findFirst({
-    where: {
-      date: new Date(date),
-    },
-  });
-
-  if (knownHoliday) {
-    const res = await getStockPriceOnDate(
-      symbol,
-      moment(date).subtract(1, "days").format("YYYY-MM-DD"),
-      iterations ? iterations + 1 : 0
-    );
-    setRedis(symbol, date, res);
-    return res;
-  }
-
-  let eodData = await prisma.stockEODData.findFirst({
-    where: {
-      symbol,
-      date: new Date(date),
-    },
-  });
-
-  try {
-    let temp = await getEODUncachedFromMarketstack(symbol, date);
-    eodData = await persistEODDataByDay(temp);
-    // holidays
-    if (!eodData) {
-      if (iterations && iterations > 5)
-        throw new Error("Can't find that security (" + symbol + ")");
-      const res = await getStockPriceOnDate(
-        symbol,
-        moment(date).subtract(1, "days").format("YYYY-MM-DD"),
-        iterations ? iterations + 1 : 0
-      );
-      setRedis(symbol, date, res);
-      return res;
-    }
-    if (eodData) return eodData.close;
-
-    return 0;
-  } catch (e) {
-    // maybe a holiday
-    if (iterations && iterations > 5)
-      throw new Error("Can't find that security (" + symbol + ")");
-    const res = await getStockPriceOnDate(
-      symbol,
-      moment(date).subtract(1, "days").format("YYYY-MM-DD"),
-      iterations ? iterations + 1 : 0
-    );
-    setRedis(symbol, date, res);
-    return res;
-  }
-  // persistEODDataForPastNYears
-  // get and persist data for that day
 };
 
 export const persistEODDataForPastNYears = async (
