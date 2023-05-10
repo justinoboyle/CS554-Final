@@ -1,9 +1,8 @@
 // api/tools/security[id] check if security exists
 
+import { ExternalResponse } from "@/helpers/errors";
+import { SecurityResponse } from "@/pages/api/tools/security/[id]";
 import { useState, useEffect } from "react";
-
-import type { SecurityResponse } from "../../pages/api/tools/security/[id]";
-import type { ExternalResponse } from "../../helpers/errors";
 
 export const doesSecurityExist = async (
   ticker: string

@@ -6,7 +6,7 @@ import { deletePortfolio } from "../../../helpers/portfolioHelper";
 const endpoint = async (
   req: NextApiRequest
 ): Promise<InternalResponse<boolean | null>> => {
-  if (req.method !== "DELETE") {
+  if (req.method !== "POST") {
     return {
       data: null,
       statusCode: 405,

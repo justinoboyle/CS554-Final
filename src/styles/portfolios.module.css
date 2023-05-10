@@ -47,6 +47,7 @@
 }
 
 .button {
+  max-width: 125px;
   margin: 2px;
   padding: 5px;
   margin-left: 15px;

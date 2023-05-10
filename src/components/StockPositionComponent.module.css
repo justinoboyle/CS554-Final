@@ -1,0 +1,43 @@
+.position_wrapper {
+    margin-bottom: 20px;
+    padding: 15px 30px;
+    border: 1px solid lightgray;
+    border-radius: 5px;
+    flex-grow: 30;  
+}
+
+.position_wrapper:hover {
+    background-color: rgb(136, 136, 136);
+    transition: 0.3s; 
+}
+
+.position_information {
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid lightgray;
+    border-radius: 5px;
+    background-color: rgb(272, 272, 272);
+}
+
+.position_wrapper:hover .position_information{
+    background-color: rgb(155, 155, 155);
+    transition: 0.3s; 
+}
+
+.table_header {
+    border: 1px solid lightgray;
+    font-weight: bold;
+}
+
+.table_entry {
+    border: 1px solid lightgray;
+    font-weight: normal;
+}
+
+.positive_returns {
+    color: rgb(0, 163, 0);
+}
+
+.negative_returns {
+    color: rgb(255, 32, 32);
+}

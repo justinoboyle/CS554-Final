@@ -35,6 +35,11 @@ function PortfolioPage() {
     );
   };
 
+  // TODO: Handle delete stock position
+  async function handleDelete(portfolioId: string) {
+    return alert("Not implemented yet.");
+  }
+
   if (isLoading) return <p>Loading Portfolio Data...</p>;
 
   if (!portfolio)
