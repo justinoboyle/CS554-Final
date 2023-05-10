@@ -22,7 +22,7 @@ async function dummyNotifications(): Promise<Notification[]> {
  */
 export type TopLevelData = {
   portfolios: PortfolioJoined[];
-  watchlist: Watchlist;
+  watchlist: Watchlist | null;
   notifications: Notification[];
   user: SanitizedUser;
 };

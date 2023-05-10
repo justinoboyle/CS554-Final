@@ -23,8 +23,7 @@ model User {
   role           Role      @default(USER)
   passwordBcrypt String?
   portfolioIds   String[]
-  watchlist      Watchlist @relation(fields: [watchlistId], references: [id])
-  watchlistId    String    @unique @db.ObjectId
+  watchlist      Watchlist?
   triggers       Trigger[] 
   alerts         Alert[]
 }
@@ -97,6 +96,7 @@ model StockEODData {
 
 model Watchlist {
   id     String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId String   @db.ObjectId
-  User   User     @relation
+  stocks String[] @default([])
+  user   User     @relation(fields: [userId], references: [id])
+  userId String   @unique @db.ObjectId
 }

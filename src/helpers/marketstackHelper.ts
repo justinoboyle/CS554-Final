@@ -275,15 +275,15 @@ export const persistBulkEODDataByDay = async (
   /* StockEODData without id */
   type Data = Omit<StockEODData, "id">;
   const data: Data[] = unknownData.map((eod) => {
-    // if (!eod.open) console.log(eod.symbol, eod.date, eod.close);
+    // if (!eod.open) console.log(eod.symbol, eod.date, eod.close, "Hello");
     return {
       symbol: eod.symbol,
       date: new Date(eod.date),
-      open: eod.open || 0,
-      high: eod.high || 0,
-      low: eod?.low || 0,
-      close: eod.close || 0,
-      volume: eod?.volume || 0,
+      open: eod.open || -1,
+      high: eod.high || -1,
+      low: eod?.low || -1,
+      close: eod.close || -1,
+      volume: eod?.volume || -1,
       adj_high: eod?.adj_high || 0,
       adj_low: eod?.adj_low || 0,
       adj_close: eod?.adj_close || 0,

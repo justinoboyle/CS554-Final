@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import styles from "./StockPositionComponent.module.css";
 import { StockPosition } from "@prisma/client";
-import { StockPositionReturns, calculateStockPositionReturns } from "@/helpers/stockPositionHelper"
 
 type Props = {
     positionObj: StockPosition;

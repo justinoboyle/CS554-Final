@@ -5,12 +5,20 @@ import { getUserById } from './userHelper';
 import { NotFoundError } from './errors';
 
 export async function getWatchlistByUser(userId: string) {
-  // also join securities
 
-  const user = await getUserById(userId);
+  const watchlist = await prisma.watchlist.findUnique({
+    where: {
+      userId
+    },
+  })
 
-  if (!user) return null;
-
-  console.log(user.watchlist);
-  return user.watchlist;
+  if (!watchlist) {
+    return await prisma.watchlist.create({
+      data: {
+        userId,
+      }
+    });
+  }
+  
+  return watchlist;
 } 

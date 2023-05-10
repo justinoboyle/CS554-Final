@@ -31,13 +31,13 @@ function Stock() {
     async function fetchData() {
       try {
         if (router.isReady) {
+          const tickerString = "" + router.query.ticker;
           setTicker("" + router.query.ticker);
           let securityExists = await doesSecurityExist("" + router.query.ticker);
           if (!securityExists) {
             setError("Security doesn't exist");
             return;
           }
-          console.log("Security", securityExists);
           let data = await fetchStock("" + router.query.ticker);
           setStockData(data);
         }
@@ -50,6 +50,20 @@ function Stock() {
 
   function handleWatchOnClick(e: any) {
     e.preventDefault();
+    try {
+      helpers.addStockToWatchlist("" + ticker, "" + topLevelData?.user.id);
+    } catch(e) {
+      setError(e);
+    }
+  }
+
+  function handleUnwatchOnClick(e: any) {
+    e.preventDefault();
+    try {
+      helpers.removeStockFromWatchlist("" + ticker, "" + topLevelData?.user.id);
+    } catch(e) {
+      setError(e);
+    }
   }
 
   async function handleFormSubmit(e: any) {
@@ -58,7 +72,6 @@ function Stock() {
     setLoading(true);
     let amount = parseFloat(e.target.amount.value);
     let portfolioId = e.target.portfolio.value;
-    console.log(amount, portfolioId);
     try {
       checkValidAmount(amount, stock.volume);
       helpers.addPositionToPortfolio(portfolioId, stock.symbol, amount, new Date().toString());
@@ -79,7 +92,6 @@ function Stock() {
     }
   }
 
-  console.log(stockData);
   if (!stockData || !topLevelData) return <Loading />;
   if (error) return <Error message={error.message} />
 
@@ -100,6 +112,8 @@ function Stock() {
   "exchange": "XNAS",
   "date": "2021-04-09T00:00:00+0000"
   */
+
+  const watched = topLevelData?.watchlist?.stocks.includes("" + ticker);
 
   return (
     <div>
@@ -127,12 +141,21 @@ function Stock() {
         </div>
         <div className={styles.form_wrapper}>
           <div className={styles.button_wrapper}>
+            {!watched
+            ?
             <button
               className={styles.watch_button}
               onClick={handleWatchOnClick}
             >
               {"\u2606"} Watch
             </button>
+            :
+            <button
+              className={styles.watch_button}
+              onClick={handleUnwatchOnClick}
+            >
+              {"\u2606"} Unwatch
+            </button>}
           </div>
             <form className={styles.form} onSubmit={handleFormSubmit}>
             <h2 className={styles.form_title}>Buy {stock.symbol as string}</h2>

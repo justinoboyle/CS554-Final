@@ -17,31 +17,3 @@ export const doesSecurityExist = async (
 
   return data.data?.doesSecurityExist;
 };
-
-export function useSecurity() {
-  const [status, setStatus] = useState<{
-    loading: boolean;
-    doesSecurityExist?: boolean;
-    error?: Error;
-  }>({ loading: true });
-
-  function fetchData(ticker: string) {
-    fetch(`/api/tools/security/${ticker}`)
-      .then((response) => {
-        return response.json();
-      })
-      .then((data) => {
-        // console.log("Security", data);
-        if (data.failed) {
-          setStatus({ loading: false, error: data.error });
-        } else {
-          setStatus({
-            doesSecurityExist: data.data.doesSecurityExist,
-            loading: false,
-          });
-        }
-      });
-  }
-
-  return { ...status, fn: fetchData };
-}
