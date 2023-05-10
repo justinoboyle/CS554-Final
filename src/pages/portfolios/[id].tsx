@@ -36,9 +36,8 @@ function PortfolioPage() {
     );
   };
 
-  // TODO: Handle delete stock position
   async function handleDelete(positionId: string) {
-    if(!portfolio){
+    if (!portfolio) {
       toast.error("Unable to delete position: Portfolio not loaded.");
       return;
     }
@@ -180,8 +179,8 @@ function PortfolioPage() {
                         percentEarnings > 0
                           ? styles.positive
                           : percentEarnings == 0
-                          ? styles.neutral
-                          : styles.negative
+                            ? styles.neutral
+                            : styles.negative
                       }
                     >
                       {earnings > 0 ? "+" : ""}${earnings.toFixed(2)}
@@ -191,13 +190,21 @@ function PortfolioPage() {
                         percentEarnings > 0
                           ? styles.positive
                           : percentEarnings == 0
-                          ? styles.neutral
-                          : styles.negative
+                            ? styles.neutral
+                            : styles.negative
                       }
                     >
                       {percentEarnings > 0 ? "+" : ""}
                       {percentEarnings.toFixed(2)}%
                     </div>
+                  </div>
+                  <div className={styles.button_wrapper}>
+                    <button
+                      className={`${styles.button} ${styles.delete_button}`}
+                      onClick={() => handleDelete(position.id)}
+                    >
+                      X
+                    </button>
                   </div>
                 </div>
               );
