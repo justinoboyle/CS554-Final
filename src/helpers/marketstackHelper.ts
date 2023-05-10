@@ -25,7 +25,7 @@ const waitIfRequired = async () => {
 
   if (lastSecondCount >= 2) {
     // wait 2 seconds
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1200));
   }
 };
 // only allow 10,000 entries at a time
