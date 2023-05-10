@@ -1,6 +1,6 @@
 import { Watchlist } from "@prisma/client";
 
-import { InternalResponse, constructHandler } from "@/helpers/errors";
+import { BadRequestError, InternalResponse, constructHandler } from "@/helpers/errors";
 import { NextApiRequest } from "next";
 
 import prisma from "@/helpers/dbHelper";
@@ -21,18 +21,29 @@ const endpoint = async (
 
   console.log("In remove", ticker, userId);
 
-  if (!ticker || !userId) throw Error("Ticker and user ID are required");
+  if (!ticker || !userId) throw new BadRequestError("Ticker and user ID are required");
 
-  const watchlist = await prisma.watchlist.delete({
+  const oldWatchlist = await prisma.watchlist.findUnique({
     where: {
       userId
     }
   });
 
-  if (!watchlist) throw Error("Ticker not in watchlist");
+  let stocks = oldWatchlist?.stocks;
+  const findIndex = stocks?.findIndex((stockTicker) => stockTicker === ticker) ?? -1;
+  stocks?.splice(findIndex, 1);
+
+  const newWatchlist = await prisma.watchlist.update({
+    where: {
+      userId,
+    },
+    data: {
+      stocks,
+    }
+  })
 
   return {
-    data: watchlist,
+    data: newWatchlist,
     failed: false,
     statusCode: 200,
   };

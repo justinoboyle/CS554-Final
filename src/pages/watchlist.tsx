@@ -22,7 +22,7 @@ export default function Watchlist() {
     return watchlist?.stocks.map((ticker) => {
       const watched = topLevelData?.watchlist?.stocks.includes("" + ticker);
       return (
-        <Link href={`/stock/${ticker}`}>
+        <Link href={`/stock/${ticker}`} key={ticker}>
           <div className={styles.stock_wrapper}>
             <h2 className={styles.stock_ticker}>{ticker}</h2>
           </div>
