@@ -11,6 +11,7 @@ export type TriggerHook = {
   mutate: () => any;
   deleteTrigger: (id: string) => Promise<void>;
   createTrigger: (symbol: string, price: number, type: string) => Promise<void>;
+  isLoading: boolean;
 };
 
 export const useTriggers = (): TriggerHook => {
@@ -19,7 +20,7 @@ export const useTriggers = (): TriggerHook => {
     const data = await res.json();
     return data;
   };
-  const { data, error, mutate } = useSWR<ExternalResponse<Trigger[]>>(
+  const { data, error, mutate, isLoading } = useSWR<ExternalResponse<Trigger[]>>(
     "/api/triggers/get",
     fetcher
   );
@@ -88,5 +89,6 @@ export const useTriggers = (): TriggerHook => {
     mutate,
     deleteTrigger,
     createTrigger,
+    isLoading
   };
 };

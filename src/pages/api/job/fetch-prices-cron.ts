@@ -5,11 +5,10 @@ import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "../../../helpers/dbHelper";
 import { checkTriggers } from "../../../helpers/triggerHelper";
 
-
 import {
   getEODUncachedByDateRange,
   persistEODDataByDay,
-  persistBulkEODDataByDay
+  persistBulkEODDataByDay,
 } from "../../../helpers/marketstackHelper";
 
 import { StockEODData, StockPosition, PrismaClient } from "@prisma/client";
@@ -22,8 +21,19 @@ const getAllUniqueTrackedTickers = async (): Promise<string[]> => {
     },
     distinct: ["ticker"],
   });
-  return allTrackedSecurities?.map((s) => s.ticker);
-};
+
+  const allAlertSecurities = await prisma.trigger.findMany({
+    select: {
+      symbol: true,
+    },
+    distinct: ["symbol"],
+  });
+
+  const allTickers = allAlertSecurities?.map((s) => s.symbol).concat(allTrackedSecurities?.map((s) => s.ticker));
+  // make a set
+  // convert back to array
+  return Array.from(new Set(allTickers));
+}
 
 const getMostRecentClosePrice = async (
   ticker: string
@@ -115,8 +125,9 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     const { symbol, date } = data;
 
     // time since
-    const timeSince = moment().tz("America/New_York").diff(moment(date)
-      .tz("America/New_York"), "days");
+    const timeSince = moment()
+      .tz("America/New_York")
+      .diff(moment(date).tz("America/New_York"), "days");
 
     // if it's been more than 1 day, we need to fetch
     if (timeSince > 1) {

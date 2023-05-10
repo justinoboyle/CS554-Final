@@ -6,11 +6,12 @@ import { useTriggers } from "../hooks/useTriggers";
 import { stringify } from "querystring";
 import { Trigger, Alert, Prisma } from "@prisma/client";
 import { AlertWithTrigger } from "../helpers/alertHelper";
+import moment from "moment";
 
 const alertDetails = (alert: AlertWithTrigger) => {
   return (
     <>
-      <td>{alert.createdAt.toString()}</td>
+      <td>{moment(alert.createdAt).format('MM-DD-YYYY HH:mm')}</td>
       <td>{alert.trigger.symbol}</td>
       <td>{alert.trigger.price}</td>
       <td>{alert.price}</td>
@@ -26,6 +27,7 @@ export default function Alerts() {
     error: triggerError,
     deleteTrigger,
     createTrigger,
+    isLoading
   } = useTriggers();
 
   const submitTrigger = async (e: any) => {
@@ -67,6 +69,7 @@ export default function Alerts() {
               <br></br>
               <input type="submit" value="Submit"></input>
             </form>
+            {isLoading && <p>Creating trigger...</p>}
           </div>
 
           {alertData && (
