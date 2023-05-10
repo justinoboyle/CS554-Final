@@ -24,8 +24,6 @@ export const StockPositionComponent = (props: Props) => {
                 const { data : currentStockData } = await fetchStock(positionObj.ticker);
                 const { data : purchaseStockData } = await fetchStock(positionObj.ticker, positionObj.createdAt);
 
-                console.log(currentStockData)
-
                 const currentPrice = currentStockData.close;
                 const purchasePrice = purchaseStockData.close;
     

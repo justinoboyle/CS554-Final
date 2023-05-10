@@ -8,6 +8,7 @@ import useTopLevelUserData from "../../hooks/useTopLevelUserData";
 import { Navbar } from "../../components/Navbar";
 import AddStockModal from "../../components/AddStockModal";
 import moment from "moment-timezone";
+import { toast } from "react-toastify";
 
 function PortfolioPage() {
   const router = useRouter();
@@ -34,8 +35,12 @@ function PortfolioPage() {
   };
 
   // TODO: Handle delete stock position
-  async function handleDelete(portfolioId: string) {
-    return alert("Not implemented yet.");
+  async function handleDelete(positionId: string) {
+    if(!portfolio){
+      toast.error("Unable to delete position: Portfolio not loaded.");
+      return;
+    }
+    return await helpers.deletePositionFromPortfolio(portfolio.id, positionId);
   }
 
   if (isLoading) return <p>Loading Portfolio Data...</p>;

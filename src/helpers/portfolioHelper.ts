@@ -348,6 +348,15 @@ export const deletePortfolio = async (
 export const deleteSinglePosition = async (
   positionId: string
 ): Promise<boolean> => {
+  console.log(positionId)
+  const position = await prisma.stockPosition.findUnique({
+    where: {
+      id: positionId,
+    },
+  });
+
+  if (!position) throw new NotFoundError("Position not found");
+
   await prisma.stockPosition.delete({
     where: {
       id: positionId,
