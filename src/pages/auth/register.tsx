@@ -30,7 +30,7 @@ export default function Login() {
   }, [user, isLoading]);
 
   // handle form submit
-  const handleLogin = async (e: any) => {
+  const handleRegister = async (e: any) => {
     e.preventDefault();
     // verify email format
     if (!email || !email.includes("@")) {
@@ -101,7 +101,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={!isValid || isLoading || disabled}
-              onClick={handleLogin}
+              onClick={handleRegister}
             >
               Sign up
             </button>
