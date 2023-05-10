@@ -7,8 +7,6 @@ const client = redis.createClient({
   url: process.env.REDIS_URL
 });
 client.connect().then(() => {});
-const flatten = require('flat');
-const unflatten = require('flat').unflatten;
 
 import moment from "moment-timezone";
 
@@ -338,10 +336,10 @@ export const getAllKnownPricesBetweenDateRange = async (
   dateTo: string
 ): Promise<StockEODData[]> => {
   // check if we're running in a browser
-  const key = symbol + '//' + dateFrom + '//' + dateTo;
+  const key = symbol + '///' + dateFrom + '///' + dateTo;
   const inCache = await client.get(key);
   if (inCache !== null){
-    const returnVal = unflatten(JSON.parse(inCache));
+    const returnVal = JSON.parse(inCache);
     return returnVal;
   }
   if (typeof window !== "undefined") {
@@ -359,7 +357,7 @@ export const getAllKnownPricesBetweenDateRange = async (
   });
 
   if (!(await client.exists(key))){
-    await client.set(key, JSON.stringify(flatten(eodData)));
+    await client.set(key, JSON.stringify(eodData));
   }
 
   return eodData;
