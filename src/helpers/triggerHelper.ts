@@ -65,7 +65,7 @@ export const checkTriggers = async (): Promise<Alert[]> => {
 
     const priceData = await prisma.stockEODData.findMany({
       where: {
-        symbol,
+        symbol: symbol.toUpperCase(),
       },
       orderBy: {
         date: "desc",
@@ -73,7 +73,10 @@ export const checkTriggers = async (): Promise<Alert[]> => {
       take: 1,
     });
 
-    if (!priceData) throw new NotFoundError("Price not found");
+    if (priceData.length === 0) {
+      // we don't have any data to check against
+      continue;
+    }
 
     const { close } = priceData[0];
 

@@ -3,6 +3,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import prisma from "../../../helpers/dbHelper";
+import { checkTriggers } from "../../../helpers/triggerHelper";
 
 
 import {
@@ -177,6 +178,8 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   await persistBulkEODDataByDay(fetchResults);
 
   logDebug("Persist results", "done");
+
+  await checkTriggers();
 
   res.status(200).json({
     success: true,
