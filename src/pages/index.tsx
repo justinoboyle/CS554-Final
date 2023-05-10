@@ -29,7 +29,7 @@ export default function Home() {
     return <div>Redirecting...</div>;
   }
 
-  const { notifications, watchlist, portfolios } = data;
+  const { portfolios } = data;
 
   const makePortfolioCard = (portfolio:PortfolioJoined) => {
     return (
@@ -42,14 +42,6 @@ export default function Home() {
             <h3>Value: ${portfolio.returns?.totalValueToday.toFixed(2)}</h3>
           </div>
         </Link>
-      </div>
-    )
-  }
-
-  const makeNotification = (notification:Notification) => {
-    return (
-      <div className={styles.notification}>
-        {/* TODO: Continue after notifications implemented */}
       </div>
     )
   }
@@ -71,20 +63,6 @@ export default function Home() {
               <h2>Portfolios</h2>
               <div className={styles.portfolioCards}>
                 {portfolios.map(makePortfolioCard)}
-              </div>
-            </div>
-          </div>
-          <div className={styles.sidebar}>
-            {/* notifications */}
-            <div className={styles.notificationsBlock}>
-              <h2>Notifications</h2>
-              <div className={styles.notifications}>
-                {notifications.map((notification, key) => (
-                  <div
-                    key={`notification` + key}
-                    className={styles.notification}
-                  ></div>
-                ))}
               </div>
             </div>
           </div>
