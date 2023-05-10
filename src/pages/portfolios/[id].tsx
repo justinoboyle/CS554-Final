@@ -27,7 +27,9 @@ function PortfolioPage() {
     shareCount: number,
     datePurchased: Date
   ) => {
-    const formattedDate = moment(datePurchased).format("YYYY-MM-DD");
+    const formattedDate = moment(datePurchased)
+      .tz("America/New_York")
+      .format("YYYY-MM-DD");
     await helpers?.addPositionToPortfolio(
       id,
       symbol,
@@ -77,14 +79,22 @@ function PortfolioPage() {
     // find newest
     let newest = positions
       ?.reduce((prev, current) =>
-        moment(prev.date).isAfter(moment(current.date)) ? prev : current
+        moment(prev.date)
+          .tz("America/New_York")
+          .isAfter(moment(current.date).tz("America/New_York"))
+          ? prev
+          : current
       )
       ?.positions.find((a) => a.ticker === ticker && a.amount == amount);
 
     // price on buy day = most recent close price on buyDay
     let oldest = positions
       ?.reduce((prev, current) =>
-        moment(prev.date).isBefore(moment(current.date)) ? prev : current
+        moment(prev.date)
+          .tz("America/New_York")
+          .isBefore(moment(current.date).tz("America/New_York"))
+          ? prev
+          : current
       )
       .positions.find((a) => a.ticker === ticker && a.amount == amount);
     if (!newest?.pricePerShare || !oldest?.pricePerShare) {
@@ -128,7 +138,9 @@ function PortfolioPage() {
                 portfolio.returns?.earningsAt
                   ?.filter((e) => e.totalValue > 0)
                   .map((earnings) =>
-                    moment(earnings.date).format("YYYY-MM-DD")
+                    moment(earnings.date)
+                      .tz("America/New_York")
+                      .format("YYYY-MM-DD")
                   ) || []
               }
               prices={
@@ -158,7 +170,9 @@ function PortfolioPage() {
                 findLocalizedReturnsForRendering(
                   position.ticker,
                   position.amount,
-                  moment(position.createdAt).format("YYYY-MM-DD")
+                  moment(position.createdAt)
+                    .tz("America/New_York")
+                    .format("YYYY-MM-DD")
                 );
               return (
                 <div key={position.id} className={styles.individualStock}>
@@ -169,7 +183,10 @@ function PortfolioPage() {
                       {position.amount == 1 ? "share" : "shares"}
                     </div>
                     <div className={styles.subheader}>
-                      on {moment(position.createdAt).format("MMM D YYYY")}
+                      on{" "}
+                      {moment(position.createdAt)
+                        .tz("America/New_York")
+                        .format("MMM D YYYY")}
                     </div>
                   </div>
                   <div className={styles.stockPrice}>
@@ -179,8 +196,8 @@ function PortfolioPage() {
                         percentEarnings > 0
                           ? styles.positive
                           : percentEarnings == 0
-                            ? styles.neutral
-                            : styles.negative
+                          ? styles.neutral
+                          : styles.negative
                       }
                     >
                       {earnings > 0 ? "+" : ""}${earnings.toFixed(2)}
@@ -190,8 +207,8 @@ function PortfolioPage() {
                         percentEarnings > 0
                           ? styles.positive
                           : percentEarnings == 0
-                            ? styles.neutral
-                            : styles.negative
+                          ? styles.neutral
+                          : styles.negative
                       }
                     >
                       {percentEarnings > 0 ? "+" : ""}

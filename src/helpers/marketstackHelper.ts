@@ -112,8 +112,8 @@ export const getEODUncachedByDateRange = async (
   }
 
   // split calls into 2 year entities and then merge
-  const dateFromMoment = moment(dateFrom);
-  const dateToMoment = moment(dateTo);
+  const dateFromMoment = moment(dateFrom).tz("America/New_York");
+  const dateToMoment = moment(dateTo).tz("America/New_York");
   const diff = dateToMoment.diff(dateFromMoment, "years");
   if (diff > 2) {
     // split into 2 calls
@@ -214,7 +214,7 @@ export const persistBulkEODDataByDay = async (
   // get earliest and latest date in eodData
   const dates = eodData.reduce(
     (acc, curr) => {
-      const currDate = moment(curr.date);
+      const currDate = moment(curr.date).tz("America/New_York");
       if (currDate.isBefore(acc.earliest)) {
         acc.earliest = currDate;
       }
@@ -224,8 +224,8 @@ export const persistBulkEODDataByDay = async (
       return acc;
     },
     {
-      earliest: moment(eodData[0].date),
-      latest: moment(eodData[0].date),
+      earliest: moment(eodData[0].date).tz("America/New_York"),
+      latest: moment(eodData[0].date).tz("America/New_York"),
     } as { earliest: moment.Moment; latest: moment.Moment }
   );
 
@@ -248,8 +248,8 @@ export const persistBulkEODDataByDay = async (
       (known) =>
         known.symbol === eod.symbol &&
         // ignore time zone
-        moment(known.date).format("YYYY-MM-DD") ===
-          moment(eod.date).format("YYYY-MM-DD")
+        moment(known.date).tz("America/New_York").format("YYYY-MM-DD") ===
+          moment(eod.date).tz("America/New_York").format("YYYY-MM-DD")
     );
     return !found;
   });
@@ -278,7 +278,7 @@ export const persistBulkEODDataByDay = async (
       exchange: eod?.exchange || "UNKNOWN",
       dividend: 0,
       split_factor: 0,
-    }
+    };
   });
   try {
     if (data && data.length > 0) {
@@ -288,8 +288,10 @@ export const persistBulkEODDataByDay = async (
     }
   } catch (e) {
     console.error(e);
-    console.log("...when trying to insert " + data.length + " entries")
+    console.log("...when trying to insert " + data.length + " entries");
   }
+
+  // add all the close prices to the local cache
 
   return;
 };
@@ -355,7 +357,6 @@ export const getAllKnownPricesBetweenDateRange = async (
       },
     },
   });
-
   if (!(await client.exists(key))){
     await client.set(key, JSON.stringify(eodData));
   }

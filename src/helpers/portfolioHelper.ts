@@ -45,29 +45,32 @@ export const wrapReturns = async (
   try {
     const positions = portfolio.positions;
 
-    const today = moment().format("YYYY-MM-DD");
+    const today = moment().tz("America/New_York").format("YYYY-MM-DD");
 
-    const yearAgo = moment().subtract(1, "year").format("YYYY-MM-DD");
+    const yearAgo = moment()
+      .tz("America/New_York")
+      .subtract(1, "year")
+      .format("YYYY-MM-DD");
 
     // list of 0 to 365
     const listOfDays = Array.from(Array(365).keys());
 
     // create date ranges
-    const startDate = moment(yearAgo).format("YYYY-MM-DD");
-    const endDate = moment(today).format("YYYY-MM-DD");
+    const startDate = moment(yearAgo)
+      .tz("America/New_York")
+      .format("YYYY-MM-DD");
+    const endDate = moment(today).tz("America/New_York").format("YYYY-MM-DD");
 
     // pick a random weekday between startDay and endDay
-    let randomDay = moment(startDate, "YYYY-MM-DD").add(
-      Math.floor(Math.random() * 365),
-      "day"
-    );
+    let randomDay = moment(startDate, "YYYY-MM-DD")
+      .tz("America/New_York")
+      .add(Math.floor(Math.random() * 365), "day");
 
     // make sure not a weekend
     while (randomDay.day() === 0 || randomDay.day() === 6) {
-      randomDay = moment(startDate, "YYYY-MM-DD").add(
-        Math.floor(Math.random() * 365),
-        "day"
-      );
+      randomDay = moment(startDate, "YYYY-MM-DD")
+        .tz("America/New_York")
+        .add(Math.floor(Math.random() * 365), "day");
     }
 
     // does db have that day for each position
@@ -118,11 +121,16 @@ export const wrapReturns = async (
     const daysWithEarnings = await Promise.all(
       listOfDays.map(async (i) => {
         // add to yearAgo make sure new
-        const day = moment(yearAgo).add(i, "day").format("YYYY-MM-DD");
+        const day = moment(yearAgo)
+          .tz("America/New_York")
+          .add(i, "day")
+          .format("YYYY-MM-DD");
         // get all the positions we had on that day
         const positionsOnDay = positions.filter((position) => {
           // use moment is before
-          const isAfter = moment(position.createdAt).isAfter(day);
+          const isAfter = moment(position.createdAt)
+            .tz("America/New_York")
+            .isAfter(day);
           return !isAfter;
         });
 
@@ -150,7 +158,8 @@ export const wrapReturns = async (
             }
             // check is weekend
             const isWeekend =
-              moment(day).day() === 0 || moment(day).day() === 6;
+              moment(day).tz("America/New_York").day() === 0 ||
+              moment(day).tz("America/New_York").day() === 6;
             // we don't have that day. return -1
             return {
               ...position,
@@ -165,7 +174,9 @@ export const wrapReturns = async (
             ticker: position.ticker,
             amount: position.amount,
             pricePerShare: position.price,
-            boughtAtDay: moment(position.createdAt).format("YYYY-MM-DD"),
+            boughtAtDay: moment(position.createdAt)
+              .tz("America/New_York")
+              .format("YYYY-MM-DD"),
           })),
           totalValue: positionsOnDayWithPrice
             ?.filter((a) => a.price != -1)
@@ -213,7 +224,9 @@ export const wrapReturns = async (
           // not added after last day wit earnings!!!
           if (
             lastDayWithEarnings &&
-            moment(position.createdAt).isAfter(lastDayWithEarnings.date)
+            moment(position.createdAt)
+              .tz("America/New_York")
+              .isAfter(lastDayWithEarnings.date)
           )
             return 0;
           // check cache
@@ -240,7 +253,9 @@ export const wrapReturns = async (
                     new Date(b.date).getTime() - new Date(a.date).getTime()
                 )
                 .find((price) =>
-                  moment(position.createdAt).isSameOrBefore(price.date)
+                  moment(position.createdAt)
+                    .tz("America/New_York")
+                    .isSameOrBefore(price.date)
                 );
               console.log(
                 "Using " + priceForDay?.date + " for " + position.createdAt
@@ -374,7 +389,7 @@ export const deletePortfolio = async (
 export const deleteSinglePosition = async (
   positionId: string
 ): Promise<boolean> => {
-  console.log(positionId)
+  console.log(positionId);
   const position = await prisma.stockPosition.findUnique({
     where: {
       id: positionId,

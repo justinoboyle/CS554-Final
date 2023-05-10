@@ -40,14 +40,6 @@ export const Navbar = ({ activePage = "home" }: { activePage: Pages }) => {
           </li>
           <li>
             <Link
-              className={activePage === "about" ? styles.active : ""}
-              href="/about"
-            >
-              About
-            </Link>
-          </li>
-          <li>
-            <Link
               className={activePage === "portfolios" ? styles.active : ""}
               href="/portfolios"
             >
@@ -80,16 +72,10 @@ export const Navbar = ({ activePage = "home" }: { activePage: Pages }) => {
               <Link href="/auth/login">Login</Link>
             </li>
           )}
-          {!isLoading && isLoggedIn && (
-            <li>Hi, {user?.name}</li>
-          )}
+          {!isLoading && isLoggedIn && <li>Hi, {user?.name}</li>}
           {!isLoading && isLoggedIn && (
             <li>
-              <button
-                onClick={handleLogout}
-              >
-                Log Out
-              </button>
+              <button onClick={handleLogout}>Log Out</button>
             </li>
           )}
         </ul>
