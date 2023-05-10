@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import styles from "./StockPositionComponent.module.css";
 import { StockPosition } from "@prisma/client";
+import { fetchStock } from "@/hooks/fetchers/useStock";
 
 type Props = {
     positionObj: StockPosition;
@@ -20,8 +21,13 @@ export const StockPositionComponent = (props: Props) => {
             try {
                 setLoading(true);  // shouldn't be needed but as a precaution
                 
-                const currentPrice = 50;
-                const purchasePrice = 10;
+                const { data : currentStockData } = await fetchStock(positionObj.ticker);
+                const { data : purchaseStockData } = await fetchStock(positionObj.ticker, positionObj.createdAt);
+
+                console.log(currentStockData)
+
+                const currentPrice = currentStockData.close;
+                const purchasePrice = purchaseStockData.close;
     
                 setCurrentPrice(currentPrice);
                 setPurchasePrice(purchasePrice);
@@ -65,11 +71,11 @@ export const StockPositionComponent = (props: Props) => {
                     <tbody>
                         <tr>
                             <td className={styles.table_entry}>{amountHeld}</td>
-                            <td className={styles.table_entry}>{currentPrice}</td>
-                            <td className={styles.table_entry}>{purchasePrice}</td>
-                            <td className={styles.table_entry}><span className = {returnsStyle}>${returnsAsAmount}</span></td>
+                            <td className={styles.table_entry}>${currentPrice.toFixed(2)}</td>
+                            <td className={styles.table_entry}>${purchasePrice.toFixed(2)}</td>
+                            <td className={styles.table_entry}><span className = {returnsStyle}>${returnsAsAmount.toFixed(2)}</span></td>
                             <td className={styles.table_entry}><span className = {returnsStyle}>{formattedPercent}</span></td>
-                            <td className={styles.table_entry}>{totalValue}</td>
+                            <td className={styles.table_entry}>${totalValue.toFixed(2)}</td>
                             <td className={styles.table_entry}>{createdDate}</td>
                         </tr>
                     </tbody>

@@ -4,10 +4,11 @@
     border: 1px solid lightgray;
     border-radius: 5px;
     flex-grow: 30;
-    color: black;
+    background-color: rgb(55, 55, 55);
 }
 
 .position_wrapper:hover {
+    color: rgb(55, 55, 55);
     background-color: rgb(136, 136, 136);
     transition: 0.3s; 
 }
@@ -17,10 +18,11 @@
     justify-content: space-between;
     border: 1px solid lightgray;
     border-radius: 5px;
-    background-color: rgb(272, 272, 272);
+    background-color: rgb(55, 55, 55);
 }
 
 .position_wrapper:hover .position_information{
+    color: rgb(55, 55, 55);
     background-color: rgb(155, 155, 155);
     transition: 0.3s; 
 }
@@ -39,6 +41,16 @@
     color: rgb(0, 163, 0);
 }
 
+.position_wrapper:hover .positive_returns{
+    color: rgb(16, 104, 4);
+    transition: 0.3s; 
+}
+
 .negative_returns {
     color: rgb(255, 32, 32);
+}
+
+.position_wrapper:hover .negative_returns{
+    color: rgb(168, 23, 23);
+    transition: 0.3s; 
 }
