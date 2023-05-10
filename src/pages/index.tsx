@@ -39,7 +39,7 @@ export default function Home() {
         >
           <div>
             <h3>{portfolio.title}</h3>
-            <h3>{portfolio.returns?.totalValueToday}</h3>
+            <h3>Value: ${portfolio.returns?.totalValueToday.toFixed(2)}</h3>
           </div>
         </Link>
       </div>

@@ -16,6 +16,10 @@ export type Helpers = {
     shares: number,
     dayPurchased: string
   ) => Promise<any>;
+  deletePositionFromPortfolio: (
+    portfolioId: string,
+    positionId: string,
+  ) => Promise<any>;
 };
 
 export type HomeHook = {
@@ -126,6 +130,47 @@ export default function useHomePage(): HomeHook {
     toast.success("Added " + shares + " shares of " + ticker);
   };
 
+  const deletePositionFromPortfolio = async (portfolioId: string, positionId: string) => {
+    const currentPortfolio = homeData?.data?.portfolios?.find((p) => p.id === portfolioId);
+    if (!currentPortfolio){
+      toast.error("Couldn't delete position: Unable to find portfolio.");
+      return;
+    }
+    const newData = {
+      ...homeData,
+      data: {
+        ...homeData?.data,
+        portfolios:
+          homeData?.data?.portfolios?.filter((p) => p.id !== portfolioId).concat({
+            id: currentPortfolio?.id,
+            title: currentPortfolio?.title,
+            userId: currentPortfolio?.userId,
+            positions: currentPortfolio?.positions.filter((p) => p.id !== positionId)
+          }) || [],
+      } as TopLevelData,
+    } as ExternalResponse<TopLevelData>;
+
+    const response = await fetch("/api/portfolio/delete-position", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        positionId,
+      }),
+    });
+    const data: ExternalResponse<boolean> = await response.json();
+  
+    if (data.error) {
+      toast.error("Couldn't delete position: " + data.error);
+      mutate(newData);
+      return;
+    }
+  
+    mutate(newData);
+    toast.success("Deleted position");
+  };
+
   return {
     data: homeData?.data,
     isLoading,
@@ -135,6 +180,7 @@ export default function useHomePage(): HomeHook {
       createPortfolio,
       deletePortfolio,
       addPositionToPortfolio,
+      deletePositionFromPortfolio
     },
   };
 }

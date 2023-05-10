@@ -48,7 +48,6 @@ const endpoint = async (
     });
   }
 
-  console.log(stock);
   if (!stock) throw new NotFoundError("Ticker not found");
 
   return {
