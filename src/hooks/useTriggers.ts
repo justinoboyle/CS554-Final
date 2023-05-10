@@ -3,9 +3,13 @@ import type { ExternalResponse } from "../helpers/errors";
 
 import type { Trigger } from "@prisma/client";
 
+import { toast } from "react-toastify";
+
 export type TriggerHook = {
   data?: Trigger[];
   error?: String;
+  mutate: () => any;
+  deleteTrigger: (id: string) => Promise<void>;
 };
 
 export const useTriggers = (): TriggerHook => {
@@ -14,13 +18,43 @@ export const useTriggers = (): TriggerHook => {
     const data = await res.json();
     return data;
   };
-  const { data, error } = useSWR<ExternalResponse<Trigger[]>>(
+  const { data, error, mutate } = useSWR<ExternalResponse<Trigger[]>>(
     "/api/triggers/get",
     fetcher
   );
 
+  const deleteTrigger = async (id: string) => {
+    const newData = {
+      ...data,
+      data: data?.data?.filter((t) => t.id !== id) || [],
+    } as ExternalResponse<Trigger[]>;
+
+    const response = await fetch("/api/triggers/delete", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        id,
+      }),
+    });
+
+    const resData: ExternalResponse<boolean> = await response.json();
+
+    if (resData.error) {
+      toast.error("Couldn't delete trigger: " + resData.error);
+      mutate();
+      return;
+    }
+
+    mutate(newData);
+    toast.success("Deleted trigger");
+  };
+
   return {
     data: data?.data,
     error: error?.error,
+    mutate,
+    deleteTrigger,
   };
 };

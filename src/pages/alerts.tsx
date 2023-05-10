@@ -30,50 +30,22 @@ const submitTrigger = async (e: any) => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ticker, price, alertType}),
+      body: JSON.stringify({ ticker, price, alertType }),
     });
     const data = response.json();
     console.log("Trigger create success:", data);
   } catch (error) {
     console.log("Trigger create error:", error);
   }
-  
-};
-
-
-const triggerDetails = (trigger: Trigger) => {
-  async function deleteTrigger(id: string) {
-    try {
-      const response = await fetch("/api/triggers/delete", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ id }),
-      });
-      const data = response.json();
-      console.log("Trigger delete success:", data);
-      // TODO: mutate the cache
-    } catch (error) {
-      console.log("Trigger delete error:", error);
-    }
-  }
-
-  return (
-    <>
-      <td>{trigger.symbol}</td>
-      <td>{trigger.price}</td>
-      <td>{trigger.type}</td>
-      <td>
-        <button onClick={() => deleteTrigger(trigger.id)}>Delete</button>
-      </td>
-    </>
-  );
 };
 
 export default function Alerts() {
   const { data: alertData, error: alertError } = useAlerts();
-  const { data: triggerData, error: triggerError } = useTriggers();
+  const {
+    data: triggerData,
+    error: triggerError,
+    deleteTrigger,
+  } = useTriggers();
   return (
     <>
       <Head>
@@ -143,7 +115,16 @@ export default function Alerts() {
                 </thead>
                 <tbody>
                   {triggerData.map((trigger) => (
-                    <tr key={trigger.id}>{triggerDetails(trigger)}</tr>
+                    <tr key={trigger.id}>
+                      <td>{trigger.symbol}</td>
+                      <td>{trigger.price}</td>
+                      <td>{trigger.type}</td>
+                      <td>
+                        <button onClick={async () => deleteTrigger(trigger.id)}>
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
                   ))}
                 </tbody>
               </table>
