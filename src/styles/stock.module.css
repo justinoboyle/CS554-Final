@@ -50,6 +50,19 @@
   background-color: rgb(158, 103, 0);
 }
 
+.unwatch_button {
+  padding: 8px 16px;
+  font-size: 15px;
+  font-weight: bold;
+  border: none;
+  border-radius: 5px;
+  background-color: rgb(184, 67, 0);
+}
+
+.unwatch_button:hover {
+  background-color: rgb(238, 129, 27);
+}
+
 .form {
   border: 1px solid lightgray;
   padding: 15px 30px;

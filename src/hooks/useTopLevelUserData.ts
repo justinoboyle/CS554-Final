@@ -20,6 +20,8 @@ export type Helpers = {
     portfolioId: string,
     positionId: string,
   ) => Promise<any>;
+  addStockToWatchlist: (ticker: string, userId: string) => Promise<void>;
+  removeStockFromWatchlist: (ticker: string, userId: string) => Promise<void>;
 };
 
 export type HomeHook = {
@@ -171,6 +173,65 @@ export default function useHomePage(): HomeHook {
     toast.success("Deleted position");
   };
 
+
+  const addStockToWatchlist = async (
+    ticker: string,
+    userId: string,
+  ) => {
+    console.log(ticker, userId);
+
+    const response = await fetch('/api/stock/watch', {
+      method: 'POST',
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        ticker,
+        userId
+      })
+    });
+    const data = await response.json();
+    console.log("Add stock", data);
+
+    if (data.error) {
+      toast.error("Couldn't add security to watchlist: " + data.error);
+      mutate();
+      return;
+    }
+
+    mutate();
+    toast.success("Added " + ticker + " to watchlist");
+  }
+
+  const removeStockFromWatchlist = async (
+    ticker: string,
+    userId: string,
+  ) => {
+    console.log(ticker, userId);
+    
+    const response = await fetch('/api/stock/unwatch', {
+      method: 'POST',
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        ticker,
+        userId
+      })
+    });
+    const data = await response.json();
+    console.log("Remove stock", data);
+
+    if (data.error) {
+      toast.error("Couldn't remove security from watchlist: " + data.error);
+      mutate();
+      return;
+    }
+
+    mutate();
+    toast.success("Removed " + ticker + " from watchlist");
+  }
+  
   return {
     data: homeData?.data,
     isLoading,
@@ -180,7 +241,9 @@ export default function useHomePage(): HomeHook {
       createPortfolio,
       deletePortfolio,
       addPositionToPortfolio,
-      deletePositionFromPortfolio
+      deletePositionFromPortfolio,
+      addStockToWatchlist,
+      removeStockFromWatchlist,
     },
   };
 }

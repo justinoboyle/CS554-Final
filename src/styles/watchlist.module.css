@@ -6,14 +6,33 @@
   font-size: 35px;
 }
 
-.container {
-  margin-top: 8 px;
-}
-
-.form {
+.main_wrapper {
   margin: 15px;
 }
 
-.form_group {
-  margin: 10px 0px;
+.watchlist_wrapper {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-column-gap: 10px;
+  grid-row-gap: 10px;
+}
+
+.stock_wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 20px;
+  border: 1px solid lightgray;
+  border-radius: 10px;
+}
+
+.stock_wrapper:hover {
+  background-color: lightgray;
+  color: black;
+  transition: 0.2s;
+  cursor: pointer;
+}
+
+.stock_ticker {
+  font-size: 40px;
 }

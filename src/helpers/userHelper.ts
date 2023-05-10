@@ -22,7 +22,6 @@ export type SanitizedUser = {
   email: string;
   name?: string;
   portfolioIds: string[];
-  watchlist?: Watchlist;
 };
 
 export type UserSession = {
@@ -54,8 +53,13 @@ export const createUser = async (
       email,
       passwordBcrypt: passwordBcrypt,
       name,
-      watchlistId: null,
     },
+  });
+
+  const watchlist = await prisma.watchlist.create({
+    data: {
+      userId: user.id,
+    }
   });
 
   return sanitizeUser(user);
@@ -91,17 +95,12 @@ export const authorizeLogin = async (
   return sanitizeUser(user);
 };
 
-type UserWithWatchlist = User & {
-  watchlist?: Watchlist | null;
-};
-
-export const sanitizeUser = (user: UserWithWatchlist): SanitizedUser => {
+export const sanitizeUser = (user: User): SanitizedUser => {
   return {
     id: user.id,
     email: user.email,
     name: user?.name || undefined,
     portfolioIds: user.portfolioIds,
-    watchlist: user?.watchlist || undefined,
   };
 };
 
@@ -145,28 +144,4 @@ export const getUserPortfolios = async (
     portfolios.map((portfolio) => wrapReturns(portfolio))
   );
   return portfoliosWithReturns;
-};
-
-export const getUserWatchlist = async (
-  userId: string
-): Promise<StockEODData[]> => {
-  if (!userId) throw new BadRequestError("Invalid user ID");
-
-  const user = await getUserById(userId);
-
-  if (!user) throw new NotFoundError("User not found");
-
-  // let watchlist = Promise.all(
-  //   (user?.watchlist || ([] as Watchlist)).map(async (stockId) => {
-  //     let stock = await prisma.stockEODData.findUnique({
-  //       where: {
-  //         id: stockId,
-  //       },
-  //     });
-  //     if (!stock) throw new NotFoundError("Stock not found");
-  //     return stock;
-  //   })
-  // );
-
-  return [];
 };
