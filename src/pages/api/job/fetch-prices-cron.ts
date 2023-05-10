@@ -114,9 +114,8 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     const { symbol, date } = data;
 
     // time since
-    const timeSince = moment(date)
-      .tz("America/New_York")
-      .diff(moment().tz("America/New_York"), "days");
+    const timeSince = moment().tz("America/New_York").diff(moment(date)
+      .tz("America/New_York"), "days");
 
     // if it's been more than 1 day, we need to fetch
     if (timeSince > 1) {
