@@ -2,6 +2,12 @@ import axios from "axios";
 import { PrismaClient, StockEODData, KnownHolidays } from "@prisma/client";
 import prisma from "./dbHelper";
 
+const redis = require('redis');
+const client = redis.createClient({
+  url: process.env.REDIS_URL
+});
+client.connect().then(() => {});
+
 import moment from "moment-timezone";
 
 export const { MARKETSTACK_API_KEY } = process.env;
@@ -28,26 +34,6 @@ const waitIfRequired = async () => {
     await new Promise((resolve) => setTimeout(resolve, 1200));
   }
 };
-// only allow 10,000 entries at a time
-// format: YYYY-MM-DD-security
-type key = `${string}-${string}-${string}-${string}`;
-const localPriceCache = new Map<string, number>();
-
-function checkLocalCache(symbol: string, date: string) {
-  const key = `${symbol}-${date}`;
-  return localPriceCache.get(key);
-}
-
-function setLocalCache(symbol: string, date: string, price: number) {
-  const key = `${symbol}-${date}`;
-  // check if already there
-  if (localPriceCache.has(key)) return;
-  localPriceCache.set(key, price);
-  // check length, remove oldest
-  if (localPriceCache.size > 10000) {
-    localPriceCache.delete(localPriceCache.keys().next().value);
-  }
-}
 
 export type MarketstackResponse<T> = {
   pagination: {
@@ -306,13 +292,6 @@ export const persistBulkEODDataByDay = async (
   }
 
   // add all the close prices to the local cache
-  unknownData.forEach((eod) => {
-    setLocalCache(
-      eod.symbol,
-      moment(eod.date).tz("America/New_York").format("YYYY-MM-DD"),
-      eod.close
-    );
-  });
 
   return;
 };
@@ -359,6 +338,12 @@ export const getAllKnownPricesBetweenDateRange = async (
   dateTo: string
 ): Promise<StockEODData[]> => {
   // check if we're running in a browser
+  const key = symbol + '///' + dateFrom + '///' + dateTo;
+  const inCache = await client.get(key);
+  if (inCache !== null){
+    const returnVal = JSON.parse(inCache);
+    return returnVal;
+  }
   if (typeof window !== "undefined") {
     throw new Error("Cannot call this function from the browser");
   }
@@ -372,108 +357,11 @@ export const getAllKnownPricesBetweenDateRange = async (
       },
     },
   });
-
-  // put all close prices in memory
-  eodData.forEach((eod) => {
-    setLocalCache(
-      eod.symbol,
-      moment(eod.date).tz("America/New_York").format("YYYY-MM-DD"),
-      eod.close
-    );
-  });
+  if (!(await client.exists(key))){
+    await client.set(key, JSON.stringify(eodData));
+  }
 
   return eodData;
-};
-
-export const getStockPriceOnDate = async (
-  symbol: string,
-  date: string,
-  iterations?: number
-): Promise<number> => {
-  const lcl = checkLocalCache(symbol, date);
-  if (lcl) return lcl;
-
-  // if it's a weekend go back one day
-  const dayOfWeek = moment(date).tz("America/New_York").day();
-
-  if (dayOfWeek === 0 || dayOfWeek === 6) {
-    const res = await getStockPriceOnDate(
-      symbol,
-      moment(date)
-        .tz("America/New_York")
-        .subtract(1, "days")
-        .format("YYYY-MM-DD"),
-      iterations ? iterations + 1 : 0
-    );
-    setLocalCache(symbol, date, res);
-    return res;
-  }
-
-  // check if it's on a known holiday
-  const knownHoliday = await prisma.knownHolidays.findFirst({
-    where: {
-      date: new Date(date),
-    },
-  });
-
-  if (knownHoliday) {
-    const res = await getStockPriceOnDate(
-      symbol,
-      moment(date)
-        .tz("America/New_York")
-        .subtract(1, "days")
-        .format("YYYY-MM-DD"),
-      iterations ? iterations + 1 : 0
-    );
-    setLocalCache(symbol, date, res);
-    return res;
-  }
-
-  let eodData = await prisma.stockEODData.findFirst({
-    where: {
-      symbol,
-      date: new Date(date),
-    },
-  });
-
-  try {
-    let temp = await getEODUncachedFromMarketstack(symbol, date);
-    eodData = await persistEODDataByDay(temp);
-    // holidays
-    if (!eodData) {
-      if (iterations && iterations > 5)
-        throw new Error("Can't find that security (" + symbol + ")");
-      const res = await getStockPriceOnDate(
-        symbol,
-        moment(date)
-          .tz("America/New_York")
-          .subtract(1, "days")
-          .format("YYYY-MM-DD"),
-        iterations ? iterations + 1 : 0
-      );
-      setLocalCache(symbol, date, res);
-      return res;
-    }
-    if (eodData) return eodData.close;
-
-    return 0;
-  } catch (e) {
-    // maybe a holiday
-    if (iterations && iterations > 5)
-      throw new Error("Can't find that security (" + symbol + ")");
-    const res = await getStockPriceOnDate(
-      symbol,
-      moment(date)
-        .tz("America/New_York")
-        .subtract(1, "days")
-        .format("YYYY-MM-DD"),
-      iterations ? iterations + 1 : 0
-    );
-    setLocalCache(symbol, date, res);
-    return res;
-  }
-  // persistEODDataForPastNYears
-  // get and persist data for that day
 };
 
 export const persistEODDataForPastNYears = async (

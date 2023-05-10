@@ -12,7 +12,13 @@ Run:
 npm start
 ```
 
-Go to [http://localhost:3000](http://localhost:3000) to see the website.
+If your port 3000 is in use, you can change it:
+
+```
+PORT=3001 npm start
+```
+
+Go to [http://localhost:PORT](http://localhost:PORT) (default 3000) to see the website.
 
 ## Credentials
 You can sign in with the following credentials, if you want to use an account we made for you, or you can just make your own.
