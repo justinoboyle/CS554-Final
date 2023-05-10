@@ -52,7 +52,7 @@ const endpoint = async (
     };
   }
 
-  const trigger = await createTrigger(userId, ticker, priceNum, alertType);
+  const trigger = await createTrigger(userId, ticker.toUpperCase(), priceNum, alertType);
 
   return {
     data: trigger,

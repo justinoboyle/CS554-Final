@@ -6,11 +6,12 @@ import { useTriggers } from "../hooks/useTriggers";
 import { stringify } from "querystring";
 import { Trigger, Alert, Prisma } from "@prisma/client";
 import { AlertWithTrigger } from "../helpers/alertHelper";
+import moment from "moment";
 
 const alertDetails = (alert: AlertWithTrigger) => {
   return (
     <>
-      <td>{alert.createdAt.toString()}</td>
+      <td>{moment(alert.createdAt).format('MM-DD-YYYY HH:mm')}</td>
       <td>{alert.trigger.symbol}</td>
       <td>{alert.trigger.price}</td>
       <td>{alert.price}</td>
@@ -19,61 +20,24 @@ const alertDetails = (alert: AlertWithTrigger) => {
   );
 };
 
-const submitTrigger = async (e: any) => {
-  e.preventDefault();
-  try {
+export default function Alerts() {
+  const { data: alertData, error: alertError } = useAlerts();
+  const {
+    data: triggerData,
+    error: triggerError,
+    deleteTrigger,
+    createTrigger,
+    isLoading
+  } = useTriggers();
+
+  const submitTrigger = async (e: any) => {
+    e.preventDefault();
     const ticker = e.target.ticker.value;
     const price = e.target.price.value;
     const alertType = e.target.alertType.value;
-    const response = await fetch("/api/triggers/create", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ticker, price, alertType}),
-    });
-    const data = response.json();
-    console.log("Trigger create success:", data);
-  } catch (error) {
-    console.log("Trigger create error:", error);
-  }
-  
-};
+    await createTrigger(ticker, price, alertType);
+  };
 
-
-const triggerDetails = (trigger: Trigger) => {
-  async function deleteTrigger(id: string) {
-    try {
-      const response = await fetch("/api/triggers/delete", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ id }),
-      });
-      const data = response.json();
-      console.log("Trigger delete success:", data);
-      // TODO: mutate the cache
-    } catch (error) {
-      console.log("Trigger delete error:", error);
-    }
-  }
-
-  return (
-    <>
-      <td>{trigger.symbol}</td>
-      <td>{trigger.price}</td>
-      <td>{trigger.type}</td>
-      <td>
-        <button onClick={() => deleteTrigger(trigger.id)}>Delete</button>
-      </td>
-    </>
-  );
-};
-
-export default function Alerts() {
-  const { data: alertData, error: alertError } = useAlerts();
-  const { data: triggerData, error: triggerError } = useTriggers();
   return (
     <>
       <Head>
@@ -105,6 +69,7 @@ export default function Alerts() {
               <br></br>
               <input type="submit" value="Submit"></input>
             </form>
+            {isLoading && <p>Creating trigger...</p>}
           </div>
 
           {alertData && (
@@ -143,7 +108,16 @@ export default function Alerts() {
                 </thead>
                 <tbody>
                   {triggerData.map((trigger) => (
-                    <tr key={trigger.id}>{triggerDetails(trigger)}</tr>
+                    <tr key={trigger.id}>
+                      <td>{trigger.symbol}</td>
+                      <td>{trigger.price}</td>
+                      <td>{trigger.type}</td>
+                      <td>
+                        <button onClick={async () => deleteTrigger(trigger.id)}>
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
                   ))}
                 </tbody>
               </table>
