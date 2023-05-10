@@ -19,33 +19,23 @@ const alertDetails = (alert: AlertWithTrigger) => {
   );
 };
 
-const submitTrigger = async (e: any) => {
-  e.preventDefault();
-  try {
-    const ticker = e.target.ticker.value;
-    const price = e.target.price.value;
-    const alertType = e.target.alertType.value;
-    const response = await fetch("/api/triggers/create", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ ticker, price, alertType }),
-    });
-    const data = response.json();
-    console.log("Trigger create success:", data);
-  } catch (error) {
-    console.log("Trigger create error:", error);
-  }
-};
-
 export default function Alerts() {
   const { data: alertData, error: alertError } = useAlerts();
   const {
     data: triggerData,
     error: triggerError,
     deleteTrigger,
+    createTrigger,
   } = useTriggers();
+
+  const submitTrigger = async (e: any) => {
+    e.preventDefault();
+    const ticker = e.target.ticker.value;
+    const price = e.target.price.value;
+    const alertType = e.target.alertType.value;
+    await createTrigger(ticker, price, alertType);
+  };
+
   return (
     <>
       <Head>

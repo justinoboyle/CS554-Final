@@ -10,6 +10,7 @@ export type TriggerHook = {
   error?: String;
   mutate: () => any;
   deleteTrigger: (id: string) => Promise<void>;
+  createTrigger: (symbol: string, price: number, type: string) => Promise<void>;
 };
 
 export const useTriggers = (): TriggerHook => {
@@ -51,10 +52,35 @@ export const useTriggers = (): TriggerHook => {
     toast.success("Deleted trigger");
   };
 
+  const createTrigger = async (
+    ticker: string,
+    price: number,
+    alertType: string
+  ) => {
+    try {
+      const response = await fetch("/api/triggers/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ ticker, price, alertType }),
+      });
+      const data = await response.json();
+      if (data.error) {
+        throw new Error(data.error);
+      }
+      toast.success("Created trigger");
+    } catch (error) {
+      toast.error("Couldn't create trigger: " + error);
+    }
+    mutate();
+  };
+
   return {
     data: data?.data,
     error: error?.error,
     mutate,
     deleteTrigger,
+    createTrigger,
   };
 };
