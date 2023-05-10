@@ -182,7 +182,11 @@ function PortfolioPage() {
               return (
                 <div key={position.id} className={styles.individualStock}>
                   <div className={styles.stockInfo}>
-                    <div className={styles.header}>{position.ticker}</div>
+                    <div className={styles.header}>
+                      <Link href={`/stock/${position.ticker}`}>
+                        {position.ticker}
+                      </Link>
+                    </div>
                     <div className={styles.subheader}>
                       {position.amount}{" "}
                       {position.amount == 1 ? "share" : "shares"}
