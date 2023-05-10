@@ -3,7 +3,8 @@
     padding: 15px 30px;
     border: 1px solid lightgray;
     border-radius: 5px;
-    flex-grow: 30;  
+    flex-grow: 30;
+    color: black;
 }
 
 .position_wrapper:hover {

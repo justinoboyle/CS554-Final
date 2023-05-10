@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import styles from "./StockPositionComponent.module.css";
 import { StockPosition } from "@prisma/client";
-import { StockPositionReturns, calculateStockPositionReturns } from "@/helpers/stockPositionHelper"
 
 type Props = {
     positionObj: StockPosition;
@@ -21,7 +20,6 @@ export const StockPositionComponent = (props: Props) => {
             try {
                 setLoading(true);  // shouldn't be needed but as a precaution
                 
-                // TODO get this without getEODUncachedFromMarketstack
                 const currentPrice = 50;
                 const purchasePrice = 10;
     
