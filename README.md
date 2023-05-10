@@ -35,7 +35,7 @@ Password: grading
 
 ## Redis info
 
-You can use your own Redis server if you want by setting . However, we already have a hosted one configured in .env for you.
+You can use your own Redis server if you want by setting `REDIS_URL` in the .env file. However, we already have a hosted one configured in .env for you.
 
 ## MongoDB info
 
