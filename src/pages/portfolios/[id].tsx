@@ -1,5 +1,5 @@
 import { PortfolioComponent } from "../../components/PortfolioComponent";
-import { StockPositionComponent } from "../../components/StockPositionComponent";
+import Link from "next/link";
 import type { PortfolioJoined } from "../../helpers/portfolioHelper";
 import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
@@ -117,6 +117,11 @@ function PortfolioPage() {
         setIsOpen={(isOpen: boolean) => setShowModal(isOpen)}
         onAdd={onAddStock}
       />
+      <div>
+        <Link href={"/portfolios/"} className={styles.return_link}>
+          Return to portfolios ⮐
+        </Link>
+      </div>
       <div className={styles.layout}>
         <div className={styles.leftMajorSection}>
           <PortfolioComponent key={id} id={id} portfolioObj={portfolio} />

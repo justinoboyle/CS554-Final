@@ -170,3 +170,11 @@
   /* better gray */
   color: rgb(136, 136, 136);
 }
+
+.return_link {
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid lightgray;
+  align-items: center;
+  margin: 1px;
+}
