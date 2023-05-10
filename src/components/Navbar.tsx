@@ -3,7 +3,25 @@ import styles from "./Navbar.module.css";
 
 import useUser from "../hooks/useUser";
 
-type Pages = "home" | "about" | "portfolios" | "watchlist" | "";
+type Pages = "home" | "about" | "portfolios" | "watchlist" | "alerts" | "";
+
+// handle form submit
+const handleLogout = async (e: any) => {
+  e.preventDefault();
+  // call api
+  // api/auth/logout
+  const response = await fetch("/api/auth/logout", {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  if (response.ok) {
+    window.location.href = "/";
+  } else {
+    // TODO: Handling?
+  }
+};
 
 export const Navbar = ({ activePage = "home" }: { activePage: Pages }) => {
   const { user, isLoggedIn, isLoading } = useUser();
@@ -38,6 +56,14 @@ export const Navbar = ({ activePage = "home" }: { activePage: Pages }) => {
           </li>
           <li>
             <Link
+              className={activePage === "alerts" ? styles.active : ""}
+              href="/alerts"
+            >
+              Alerts
+            </Link>
+          </li>
+          <li>
+            <Link
               className={activePage === "watchlist" ? styles.active : ""}
               href="/watchlist"
             >
@@ -54,7 +80,18 @@ export const Navbar = ({ activePage = "home" }: { activePage: Pages }) => {
               <Link href="/auth/login">Login</Link>
             </li>
           )}
-          {!isLoading && isLoggedIn && <li>Hi, {user?.name} </li>}
+          {!isLoading && isLoggedIn && (
+            <li>Hi, {user?.name}</li>
+          )}
+          {!isLoading && isLoggedIn && (
+            <li>
+              <button
+                onClick={handleLogout}
+              >
+                Log Out
+              </button>
+            </li>
+          )}
         </ul>
       </div>
     </div>
