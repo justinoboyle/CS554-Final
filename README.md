@@ -22,6 +22,17 @@ Email: grading@stevens.edu
 Password: grading
 ```
 
+## Features and technologies from technical implementation plan
+
+- [x] Next.js
+- [x] React
+- [x] Typescript
+- [x] Redis (see below)
+- [x] MongoDB (see below)
+- [x] Vercel (check any PR or go to [cs554-final.vercel.app](https://cs554-final.vercel.app/)!)
+- [x] AWS (MongoDB and Redis are hosted on AWS) 
+- [x] Finance API: we wound up switching to Marketstack due to price (instead of Yahoo Finance or IEXCloud API), but the functionality is the same. 
+
 ## Redis info
 
 You can use your own Redis server if you want. However, we already have a hosted one configured in .env for you.
