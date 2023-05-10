@@ -8,6 +8,7 @@ import useTopLevelUserData from "../../hooks/useTopLevelUserData";
 import { Navbar } from "../../components/Navbar";
 import AddStockModal from "../../components/AddStockModal";
 import moment from "moment-timezone";
+
 function PortfolioPage() {
   const router = useRouter();
   const id = "" + router?.query?.id;
@@ -31,6 +32,11 @@ function PortfolioPage() {
       formattedDate
     );
   };
+
+  // TODO: Handle delete stock position
+  async function handleDelete(portfolioId: string) {
+    return alert("Not implemented yet.");
+  }
 
   if (isLoading) return <p>Loading Portfolio Data...</p>;
 
@@ -65,7 +71,17 @@ function PortfolioPage() {
         <div id={"positions-list"}>
           <p>Current Positions:</p>
           {portfolio.positions.map((position) => (
-            <StockPositionComponent key={position.id} positionObj={position} />
+            <div key={position.id} className={styles.position_wrapper}>
+              <StockPositionComponent key={position.id} positionObj={position} />
+              <div className={styles.button_wrapper}>
+                <button
+                  className={`${styles.button} ${styles.delete_button}`}
+                  onClick={() => handleDelete(position.id)}
+                >
+                  Delete Position
+                </button>
+              </div>
+            </div>
           ))}
         </div>
       </div>

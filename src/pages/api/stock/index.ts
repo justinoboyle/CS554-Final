@@ -6,7 +6,7 @@ import { BadRequestError, InternalResponse, NotFoundError, constructHandler } fr
 const endpoint = async (
   req: NextApiRequest
 ): Promise<InternalResponse<StockEODData>> => {
-  if (req.method !== 'GET') {
+  if (req.method !== 'POST') {
     return {
       data: undefined,
       statusCode: 405,
@@ -15,22 +15,40 @@ const endpoint = async (
     };
   }
 
-  let { ticker } = req.query;
+  let { ticker, date } = req.body;
 
   if (!ticker) throw new BadRequestError("Ticker is required");
+  let currentDate;
 
   const prisma = new PrismaClient();
 
-  console.log(ticker.toString());
-  const stock = await prisma.stockEODData.findFirst({
-    where: {
-      symbol: ticker.toString(),
-    },
-    orderBy: {
-      date: "desc",
-    }
-  });
+  if (date) {
+    date = new Date(date);
+    currentDate = new Date();
+    var stock = await prisma.stockEODData.findFirst({
+      where: {
+        symbol: ticker.toString(),
+        date: {
+          gte: date,
+          lte: currentDate,
+        }
+      },
+      orderBy: {
+        date: "asc",
+      }
+    });
+  } else {
+    var stock = await prisma.stockEODData.findFirst({
+      where: {
+        symbol: ticker.toString(),
+      },
+      orderBy: {
+        date: "desc",
+      }
+    });
+  }
 
+  console.log(stock);
   if (!stock) throw new NotFoundError("Ticker not found");
 
   return {

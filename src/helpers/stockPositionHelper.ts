@@ -5,7 +5,7 @@ import { MARKETSTACK_API_KEY, MarketstackResponse, MarketstackEod } from "./mark
 import axios from "axios";
 import prisma from "./dbHelper";
 
-type StockPositionReturns = {
+export type StockPositionReturns = {
     asAmount: number,
     asPercentage: number
 }
@@ -40,17 +40,4 @@ export const getStockPositionById = async (
     if (!stockPosition) throw new NotFoundError("Stock position not found");
   
     return stockPosition;
-};
-
-
-export const calculateStockPositionReturns = (
-    stockPosition: StockPosition,
-    purchasePrice: number,
-    currentPrice: number,
-  ): StockPositionReturns => {
-   const returns = {
-        asAmount: (currentPrice - purchasePrice) * stockPosition.amount,
-        asPercentage: (currentPrice - purchasePrice) / purchasePrice
-    }
-    return returns;
 };

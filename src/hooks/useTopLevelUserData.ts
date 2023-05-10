@@ -52,7 +52,7 @@ export default function useHomePage(): HomeHook {
     } as ExternalResponse<TopLevelData>;
 
     const response = await fetch("/api/portfolio/delete", {
-      method: "DELETE",
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
       },

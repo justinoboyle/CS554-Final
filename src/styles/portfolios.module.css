@@ -47,6 +47,7 @@
 }
 
 .button {
+  max-width: 125px;
   margin: 2px;
   padding: 5px;
   margin-left: 15px;
@@ -77,4 +78,11 @@
 
 .success {
   background-color: rgb(14, 121, 0);
+}
+
+.position_wrapper {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-bottom: 20px;  
 }
