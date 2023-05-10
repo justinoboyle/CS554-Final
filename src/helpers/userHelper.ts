@@ -1,4 +1,10 @@
-import { PrismaClient, User, Portfolio, StockEODData, Watchlist } from "@prisma/client";
+import {
+  PrismaClient,
+  User,
+  Portfolio,
+  StockEODData,
+  Watchlist,
+} from "@prisma/client";
 import bcrypt from "bcrypt";
 import {
   AlreadyExistsError,
@@ -67,6 +73,9 @@ export const authorizeLogin = async (
     where: {
       email,
     },
+    include: {
+      watchlist: true,
+    },
   });
 
   if (!user) {
@@ -98,10 +107,13 @@ export const sanitizeUser = (user: User): SanitizedUser => {
 export const getUserById = async (
   id: string
 ): Promise<SanitizedUser | null> => {
-
   const user = await prisma.user.findUnique({
     where: {
       id,
+    },
+    // with watchlist
+    include: {
+      watchlist: true,
     },
   });
 

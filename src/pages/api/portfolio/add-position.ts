@@ -120,8 +120,11 @@ const endpoint = async (
   const positionExists = portfolio.positions.find(
     (position) =>
       position.ticker === ticker &&
-      moment.utc(position.createdAt).format("YYYY-MM-DD") ===
-        moment(dayPurchased).format("YYYY-MM-DD")
+      moment
+        .utc(position.createdAt)
+        .tz("America/New_York")
+        .format("YYYY-MM-DD") ===
+        moment(dayPurchased).tz("America/New_York").format("YYYY-MM-DD")
   );
 
   let newShareCount = shares;

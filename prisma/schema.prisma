@@ -16,15 +16,16 @@ enum Role {
 }
 
 model User {
-  id             String    @id @default(auto()) @map("_id") @db.ObjectId
-  createdAt      DateTime  @default(now())
-  email          String    @unique
+  id             String     @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt      DateTime   @default(now())
+  email          String     @unique
   name           String?
-  role           Role      @default(USER)
+  role           Role       @default(USER)
   passwordBcrypt String?
   portfolioIds   String[]
-  watchlist      Watchlist?
-  triggers       Trigger[] 
+  watchlist      Watchlist? @relation()
+  watchlistId    String?     @unique @db.ObjectId
+  triggers       Trigger[]
   alerts         Alert[]
 }
 
@@ -70,6 +71,7 @@ model Alert {
   trigger   Trigger  @relation(fields: [triggerId], references: [id])
   price     Float
 }
+
 model KnownHolidays {
   id   String   @id @default(auto()) @map("_id") @db.ObjectId
   date DateTime

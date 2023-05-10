@@ -8,6 +8,9 @@ import useTopLevelUserData from "../../hooks/useTopLevelUserData";
 import { Navbar } from "../../components/Navbar";
 import AddStockModal from "../../components/AddStockModal";
 import moment from "moment-timezone";
+import { toast } from "react-toastify";
+
+import StockChart from "../../components/StockChart";
 
 function PortfolioPage() {
   const router = useRouter();
@@ -24,7 +27,9 @@ function PortfolioPage() {
     shareCount: number,
     datePurchased: Date
   ) => {
-    const formattedDate = moment(datePurchased).format("YYYY-MM-DD");
+    const formattedDate = moment(datePurchased)
+      .tz("America/New_York")
+      .format("YYYY-MM-DD");
     await helpers?.addPositionToPortfolio(
       id,
       symbol,
@@ -33,9 +38,12 @@ function PortfolioPage() {
     );
   };
 
-  // TODO: Handle delete stock position
-  async function handleDelete(portfolioId: string) {
-    return alert("Not implemented yet.");
+  async function handleDelete(positionId: string) {
+    if (!portfolio) {
+      toast.error("Unable to delete position: Portfolio not loaded.");
+      return;
+    }
+    return await helpers.deletePositionFromPortfolio(portfolio.id, positionId);
   }
 
   if (isLoading) return <p>Loading Portfolio Data...</p>;
@@ -47,6 +55,70 @@ function PortfolioPage() {
       </p>
     );
 
+  const findLocalizedReturnsForRendering = (
+    ticker: string,
+    amount: number,
+    buyDay: string
+  ) => {
+    // return portfolio.returns?.earningsAt?.find((earnings) => earnings.positions.find(a=>a.ticker === ticker))?.positions.find(a=>a.ticker === ticker)?.price;
+    // find ticker with same amount and get price
+    let positions = portfolio.returns?.earningsAt?.filter((earnings) =>
+      earnings.positions.find(
+        (a) =>
+          a.ticker === ticker && a.amount == amount && a.boughtAtDay == buyDay
+      )
+    );
+
+    if (!positions || positions.length < 1)
+      return {
+        earnings: 0,
+        percentEarnings: 0,
+        todayPrice: 0,
+      };
+
+    // find newest
+    let newest = positions
+      ?.reduce((prev, current) =>
+        moment(prev.date)
+          .tz("America/New_York")
+          .isAfter(moment(current.date).tz("America/New_York"))
+          ? prev
+          : current
+      )
+      ?.positions.find((a) => a.ticker === ticker && a.amount == amount);
+
+    // price on buy day = most recent close price on buyDay
+    let oldest = positions
+      ?.reduce((prev, current) =>
+        moment(prev.date)
+          .tz("America/New_York")
+          .isBefore(moment(current.date).tz("America/New_York"))
+          ? prev
+          : current
+      )
+      .positions.find((a) => a.ticker === ticker && a.amount == amount);
+    if (!newest?.pricePerShare || !oldest?.pricePerShare) {
+      console.log(newest, oldest);
+      return {
+        earnings: 0,
+        percentEarnings: 0,
+        todayPrice: 0,
+      };
+    }
+
+    const earnings = (newest?.pricePerShare - oldest?.pricePerShare) * amount;
+    const percentEarnings =
+      ((newest?.pricePerShare - oldest?.pricePerShare) /
+        oldest?.pricePerShare) *
+      100;
+    const todayPrice = newest?.pricePerShare;
+    return {
+      earnings,
+      percentEarnings,
+      todayPrice,
+    };
+  };
+
   return (
     <>
       <Navbar activePage={"portfolios"} />
@@ -55,34 +127,106 @@ function PortfolioPage() {
         setIsOpen={(isOpen: boolean) => setShowModal(isOpen)}
         onAdd={onAddStock}
       />
-      <div>
-        {portfolio && (
+      <div className={styles.layout}>
+        <div className={styles.leftMajorSection}>
           <PortfolioComponent key={id} id={id} portfolioObj={portfolio} />
-        )}
-
-        <div className={styles.button_wrapper}>
-          <button
-            className={`${styles.button} ${styles.add_button}`}
-            onClick={() => setShowModal(true)}
-          >
-            Add stock
-          </button>
+          {/* graph prices */}
+          <div className={styles.graph}>
+            <StockChart
+              days={
+                /* list of days */
+                portfolio.returns?.earningsAt
+                  ?.filter((e) => e.totalValue > 0)
+                  .map((earnings) =>
+                    moment(earnings.date)
+                      .tz("America/New_York")
+                      .format("YYYY-MM-DD")
+                  ) || []
+              }
+              prices={
+                /* list of prices */
+                portfolio.returns?.earningsAt
+                  ?.filter((e) => e.totalValue > 0)
+                  .map((earnings) => earnings.totalValue) || []
+              }
+            />
+          </div>
         </div>
-        <div id={"positions-list"}>
-          <p>Current Positions:</p>
-          {portfolio.positions.map((position) => (
-            <div key={position.id} className={styles.position_wrapper}>
-              <StockPositionComponent key={position.id} positionObj={position} />
-              <div className={styles.button_wrapper}>
-                <button
-                  className={`${styles.button} ${styles.delete_button}`}
-                  onClick={() => handleDelete(position.id)}
-                >
-                  Delete Position
-                </button>
+
+        <div className={styles.sideBarSection}>
+          <div id={"positions-list"}>
+            <div className={styles.positions_header}>
+              <h4>Positions</h4>
+              {/* add button */}
+              <div
+                className={styles.addButton}
+                onClick={() => setShowModal(true)}
+              >
+                + Add
               </div>
             </div>
-          ))}
+            {portfolio.positions.map((position) => {
+              const { earnings, percentEarnings, todayPrice } =
+                findLocalizedReturnsForRendering(
+                  position.ticker,
+                  position.amount,
+                  moment(position.createdAt)
+                    .tz("America/New_York")
+                    .format("YYYY-MM-DD")
+                );
+              return (
+                <div key={position.id} className={styles.individualStock}>
+                  <div className={styles.stockInfo}>
+                    <div className={styles.header}>{position.ticker}</div>
+                    <div className={styles.subheader}>
+                      {position.amount}{" "}
+                      {position.amount == 1 ? "share" : "shares"}
+                    </div>
+                    <div className={styles.subheader}>
+                      on{" "}
+                      {moment(position.createdAt)
+                        .tz("America/New_York")
+                        .format("MMM D YYYY")}
+                    </div>
+                  </div>
+                  <div className={styles.stockPrice}>
+                    {/* renderPercent */}
+                    <div
+                      className={
+                        percentEarnings > 0
+                          ? styles.positive
+                          : percentEarnings == 0
+                          ? styles.neutral
+                          : styles.negative
+                      }
+                    >
+                      {earnings > 0 ? "+" : ""}${earnings.toFixed(2)}
+                    </div>
+                    <div
+                      className={
+                        percentEarnings > 0
+                          ? styles.positive
+                          : percentEarnings == 0
+                          ? styles.neutral
+                          : styles.negative
+                      }
+                    >
+                      {percentEarnings > 0 ? "+" : ""}
+                      {percentEarnings.toFixed(2)}%
+                    </div>
+                  </div>
+                  <div className={styles.button_wrapper}>
+                    <button
+                      className={`${styles.button} ${styles.delete_button}`}
+                      onClick={() => handleDelete(position.id)}
+                    >
+                      X
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
     </>
