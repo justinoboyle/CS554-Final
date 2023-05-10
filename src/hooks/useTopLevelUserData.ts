@@ -36,6 +36,11 @@ export default function useHomePage(): HomeHook {
   } = useSWR<ExternalResponse<TopLevelData>>("/api/pages/top-level", fetcher);
   const isLoading = !homeData && !error;
 
+  // after fetching, if the user's not signed in, redirect to the sign in page
+  if (!isLoading && homeData && !homeData.data?.user) {
+    window.location.href = "/auth/login";
+  }
+
   const deletePortfolio = async (portfolioId: string) => {
     const newData = {
       ...homeData,
@@ -47,7 +52,7 @@ export default function useHomePage(): HomeHook {
     } as ExternalResponse<TopLevelData>;
 
     const response = await fetch("/api/portfolio/delete", {
-      method: "DELETE",
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
@@ -79,8 +84,7 @@ export default function useHomePage(): HomeHook {
         userId: homeData?.data?.user?.id,
       }),
     });
-    const data: ExternalResponse<PortfolioJoined> =
-      await response.json();
+    const data: ExternalResponse<PortfolioJoined> = await response.json();
 
     if (data.error) {
       toast.error("Couldn't create portfolio: " + data.error);
@@ -110,8 +114,7 @@ export default function useHomePage(): HomeHook {
         dayPurchased,
       }),
     });
-    const data: ExternalResponse<PortfolioJoined> =
-      await response.json();
+    const data: ExternalResponse<PortfolioJoined> = await response.json();
 
     if (data.error) {
       toast.error("Couldn't add position to portfolio: " + data.error);

@@ -3,6 +3,8 @@ import styles from '@/styles/watchlist.module.css'
 import { Navbar } from "../components/Navbar";
 
 export default function Watchlist() {
+  
+
   return (
     <>
       <Head>
