@@ -1,6 +1,6 @@
 import useSWR from "swr";
 import type { ExternalResponse } from "../helpers/errors";
-
+import { doesSecurityExist } from "../hooks/fetchers/useSecurity";
 import type { Trigger } from "@prisma/client";
 
 import { toast } from "react-toastify";
@@ -58,6 +58,12 @@ export const useTriggers = (): TriggerHook => {
     alertType: string
   ) => {
     try {
+      const stockExists = await doesSecurityExist(ticker);
+      if (!stockExists) {
+        toast.error("Couldn't create trigger: that ticker doesn't exist");
+        return;
+      }
+
       const response = await fetch("/api/triggers/create", {
         method: "POST",
         headers: {
