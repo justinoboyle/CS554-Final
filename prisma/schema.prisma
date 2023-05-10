@@ -23,9 +23,10 @@ model User {
   role           Role      @default(USER)
   passwordBcrypt String?
   portfolioIds   String[]
+  watchlist      Watchlist @relation(fields: [watchlistId], references: [id])
+  watchlistId    String    @unique @db.ObjectId
   triggers       Trigger[] 
   alerts         Alert[]
-  watchlist      String[]
 }
 
 model StockPosition {
@@ -92,4 +93,10 @@ model StockEODData {
   symbol       String
   exchange     String
   date         DateTime
+}
+
+model Watchlist {
+  id     String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId String   @db.ObjectId
+  User   User     @relation
 }

@@ -17,24 +17,6 @@ export function calculateCostOfShares(amount: number, closePrice: number) {
 }
 
 export function checkValidAmount(amount: number, volume: number) {
-  if (amount > volume) {
-    toast.error("Not enough shares available");
-    throw new Error("Not enough shares available");
-  }
-}
-
-export async function createStockPosition(ticker: string, amount: number, portfolioId: string) {
-  let response = await fetch('/api/stock/position/create', {
-    method: 'POST',
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify( {
-      ticker,
-      amount,
-      portfolioId
-    })
-  });
-  let data = await response.json();
-  return data;
+  if (isNaN(amount)) throw new Error("Please enter an amount");
+  if (amount > volume) throw new Error("Not enough shares available");
 }
