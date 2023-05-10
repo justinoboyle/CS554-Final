@@ -7,6 +7,8 @@ import Link from "next/link";
 
 import type { ExternalResponse } from "../../helpers/errors";
 
+import { useRouter } from "next/router";
+
 export default function Login() {
   const { user, isLoading } = useUser();
 
@@ -15,6 +17,8 @@ export default function Login() {
   const [name, setName] = useState("");
   const [disabled, setDisabled] = useState(false);
   const [error, setError] = useState("");
+
+  const router = useRouter();
 
   const isValid =
     email?.trim().length > 0 &&
@@ -105,9 +109,8 @@ export default function Login() {
             >
               Sign up
             </button>
-            <div
-              className={styles.register}
-              onClick={() => (window.location.href = "/auth/login")}
+            <div className={styles.register}
+              onClick={() => router.push("/auth/login")}
             >
               <Link href="/auth/register">Already have an account?</Link>
             </div>
