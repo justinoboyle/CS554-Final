@@ -35,12 +35,12 @@ Password: grading
 
 ## Redis info
 
-You can use your own Redis server if you want. However, we already have a hosted one configured in .env for you.
+You can use your own Redis server if you want by setting . However, we already have a hosted one configured in .env for you.
 
 ## MongoDB info
 
 You can use your own MongoDB database if you want. However, our ORM module (Prisma) uses a feature called replica sets that are tricky to set up on localhost. As
-such, we have included a .env file with an AWS-deployed MongoDB server (through Atlas). It's best to just use this server -- if you want to inspect what's going on, check out .env and put it into MongoDB compass.
+such, we have included a .env file with an AWS-deployed MongoDB server (through Atlas). It's best to just use this server -- if you want to inspect what's going on, check out .env and put the URL into MongoDB Compass -- you'll be able to inspect it the same as a local server.
 
 I also recommend using the already-seeded database since seeing the data can take a little bit of time sometimes.
 
@@ -54,6 +54,10 @@ DATABASE_URL=mongodb://127.0.0.1:27017
 
 If you're getting an error similar to `Prisma needs to perform transactions, which requires your MongoDB server to be run as a replica set.`, the easiest way to test is 
 by using a free MongoDB Atlas cluster. You can create a free cluster [here](https://www.mongodb.com/cloud/atlas/register). Once you've created a cluster, you can get the URI by clicking on the "Connect" button, and then clicking "Connect your application". You can then copy the URI and paste it into the `.env` file. You can also set up replica sets locally, but it's not easy.
+
+### Seeding with my own server
+
+Seeding should happen automatically when you add a new stock to a portfolio, or view a stock page. You may have to be patient if it is the first time you are adding this position.
 
 ## Running the Next.js server
 
